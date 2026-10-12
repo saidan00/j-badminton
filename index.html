@@ -1242,7 +1242,7 @@
         </div>
 
         <div class="result-body">
-          <p class="label">Biên lai</p>
+          <p class="label">Chi phí</p>
           <div class="r-row"><span>Tiền sân</span><b id="rCourt"></b></div>
           <div class="r-row"><span>Tiền cầu<small id="rShuttleFormula"></small></span><b id="rShuttle"></b></div>
           <div class="r-row"><span>Tiền nước</span><b id="rWater"></b></div>
@@ -1763,7 +1763,7 @@
         y += BOARD_H + GAP;
         panel(P, y, BW, RECEIPT_H, paper);
         const ix = P + 48, ir = P + BW - 48;
-        text('BIÊN LAI', ix, y + 70, `800 26px ${display}`, muted, { spacing: 5 });
+        text('CHI PHÍ', ix, y + 70, `800 26px ${display}`, muted, { spacing: 5 });
         const rows = [
           ['Tiền sân', vnd(r.court)],
           ['Tiền cầu', vnd(r.shuttleCost), `${r.shuttles}/${SHUTTLES_PER_TUBE} × ${num(r.tubePrice)}`],
