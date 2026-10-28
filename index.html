@@ -199,6 +199,13 @@
       }
     }
 
+    /* Máy rất hẹp: bỏ logo cầu để logo CLB không bị đẩy tràn ra ngoài */
+    @media (max-width: 359px) {
+      .logo {
+        display: none;
+      }
+    }
+
     /* ---------- Bố cục ---------- */
     .grid {
       display: grid;
@@ -1073,6 +1080,16 @@
       color: rgba(255, 255, 255, .55);
     }
 
+    .foot a {
+      color: var(--lime);
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .foot a:hover {
+      text-decoration: underline;
+    }
+
     .sr-only {
       position: absolute;
       width: 1px;
@@ -1315,7 +1332,7 @@
       </section>
     </div>
 
-    <p class="foot">Bạn thanh toán, host thank you 🏸</p>
+    <p class="foot">Bạn thanh toán, host thank you 🏸<br><a href="stats.html">Thành tích cá nhân →</a></p>
   </main>
 
   <div class="toast" id="toast" role="status" aria-live="polite">

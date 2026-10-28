@@ -1,0 +1,19 @@
+[
+  {
+    "id": "2026-10",
+    "type": "monthly",
+    "date": "2026-10-27",
+    "matches": [
+      { "a": ["binh", "kim"], "b": ["hung", "loc"], "score": [16, 21] },
+      { "a": ["thinh", "huy"], "b": ["khuong", "kiet"], "score": [13, 21] },
+      { "a": ["hanh", "huy"], "b": ["minh", "hung"], "score": [17, 21] },
+      { "a": ["kim", "thinh"], "b": ["khuong", "loc"], "score": [17, 21] },
+      { "a": ["binh", "huy"], "b": ["hung", "kiet"], "score": [12, 21] },
+      { "a": ["hanh", "thinh"], "b": ["minh", "khuong"], "score": [21, 18] },
+      { "a": ["kim", "huy"], "b": ["kiet", "loc"], "score": [21, 9] },
+      { "a": ["binh", "thinh"], "b": ["khuong", "hung"], "score": [12, 21] },
+      { "a": ["hanh", "kim"], "b": ["minh", "loc"], "score": [21, 13] },
+      { "a": ["binh", "hanh"], "b": ["kiet", "minh"], "score": [21, 17] }
+    ]
+  }
+]

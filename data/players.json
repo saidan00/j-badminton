@@ -1,0 +1,12 @@
+[
+  { "id": "binh", "name": "Bình", "gender": "M" },
+  { "id": "kim", "name": "Thiên Kim", "gender": "F", "aliases": ["Kim"] },
+  { "id": "thinh", "name": "Thịnh", "gender": "M" },
+  { "id": "huy", "name": "Huy", "gender": "M" },
+  { "id": "hanh", "name": "Hoàng Anh", "gender": "M", "aliases": ["H. Anh"] },
+  { "id": "hung", "name": "Hùng", "gender": "M", "aliases": ["Chín"] },
+  { "id": "loc", "name": "Bảo Lộc", "gender": "F", "aliases": ["Lộc"] },
+  { "id": "khuong", "name": "Khương", "gender": "M" },
+  { "id": "kiet", "name": "Kiệt", "gender": "M" },
+  { "id": "minh", "name": "Minh", "gender": "M" }
+]
