@@ -141,27 +141,11 @@
       font: italic 800 clamp(38px, 8vw, 66px)/.9 var(--display);
       text-transform: uppercase;
       letter-spacing: .005em;
-      margin: 8px 0 12px;
+      margin-top: 8px;
     }
 
     h1 span {
       color: var(--lime);
-    }
-
-    .chips {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .chip {
-      font: 600 12px/1 var(--body);
-      padding: 6px 10px;
-      border-radius: 99px;
-      background: rgba(255, 255, 255, .09);
-      border: 1px solid rgba(255, 255, 255, .18);
-      color: #e6f4ec;
-      white-space: nowrap;
     }
 
     @media (max-width: 520px) {
@@ -829,7 +813,6 @@
       <div>
         <p class="eyebrow">CLB Cầu Lông Huy Tran</p>
         <h1>Thành tích <span>cá nhân</span></h1>
-        <div class="chips" id="summary"></div>
       </div>
       <img class="club-logo" alt="CLB Cầu Lông Huy Tran" src="logo.jpg">
     </header>
@@ -1034,12 +1017,6 @@
           + group('year', 'Năm', [['all', 'Tất cả'], ...years.map((y) => [y, y])]);
       }
 
-      function renderSummary(list, stats) {
-        const matches = list.reduce((n, t) => n + t.matches.length, 0);
-        $('summary').innerHTML = [`${list.length} giải`, `${matches} trận`, `${stats.length} người chơi`]
-          .map((text) => `<span class="chip">${text}</span>`).join('');
-      }
-
       function detail(s) {
         const best = [...s.partners.entries()].sort(([, x], [, y]) =>
           rate(y) - rate(x) || y.played - x.played || y.diff - x.diff)[0];
@@ -1146,7 +1123,6 @@
         const list = filtered();
         const stats = buildStats(list);
         renderFilters();
-        renderSummary(list, stats);
         renderRanking(stats);
         renderHistory(list);
       }
