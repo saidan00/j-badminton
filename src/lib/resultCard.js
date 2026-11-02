@@ -3,7 +3,7 @@ import { CLUB_NAME } from '@/config.js';
 import { loadImage } from './browser.js';
 import { num, vnd } from './format.js';
 import { SHUTTLE } from './shuttle.js';
-import { payFormulas, ROUND_STEP, SHUTTLES_PER_TUBE, WOMEN_RATIO } from './split.js';
+import { howRows, payFormulas, ROUND_STEP, SHUTTLES_PER_TUBE, WOMEN_RATIO } from './split.js';
 
 const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
 
@@ -71,8 +71,12 @@ function drawCard(r, qr, logo) {
 
   const HEAD_H = 180;
   const BOARD_H = 400;
-  // Phần "Cách tính" trong ảnh chỉ giữ công thức Nam/Nữ, bỏ hệ số và tiền nước.
-  const RECEIPT_H = 520 + (teams.length - 1) * 44 + 44;
+  // "Cách tính" đầy đủ như trên trang: hệ số, tiền nước rồi công thức Nam/Nữ.
+  const how = [
+    ...howRows(r).map(([label, value]) => [label, value, ink]),
+    ...teams.map((t) => [t.label, t.formula, t.tone]),
+  ];
+  const RECEIPT_H = 520 + (how.length - 1) * 44 + 44;
   const QR_H = qr ? Math.max(qh, 320) + 80 : 0;
   const H = P + HEAD_H + BOARD_H + GAP + RECEIPT_H + (qr ? GAP + QR_H : 0) + 130;
 
@@ -275,10 +279,10 @@ function drawCard(r, qr, logo) {
   const collected = vnd(r.collected) + (r.surplus > 0.5 ? ` · dư ${vnd(r.surplus)}` : '');
   text(collected, ir, y + 438, `600 26px ${body}`, ink, { align: 'right' });
 
-  teams.forEach((t, i) => {
+  how.forEach(([label, value, color], i) => {
     const hy = y + 520 + i * 44;
-    text(t.label, ix, hy, `500 25px ${body}`, muted);
-    text(t.formula, ir, hy, `600 25px ${body}`, t.tone, { align: 'right' });
+    text(label, ix, hy, `500 25px ${body}`, muted);
+    text(value, ir, hy, `600 25px ${body}`, color, { align: 'right' });
   });
   y += RECEIPT_H;
 
