@@ -122,24 +122,25 @@
     }
 
     /* Khung bọc ngoài: Giữ toàn bộ kích thước, nền, viền và shadow */
-  .logo-wrapper {
-    flex: none;
-    width: 96px;
-    height: 96px;
-    margin-left: auto;
-    border-radius: 50%;
-    background: #070d1b;
-    box-shadow: 0 0 0 4px rgba(24, 38, 61, 0.9), 0 0 0 11px rgba(59, 130, 246, 0.22), 0 14px 30px -8px rgba(0, 0, 0, .45);
-    overflow: hidden; /* Cực kỳ quan trọng: Cắt đi phần ảnh bị phóng to tràn ra ngoài viền tròn */
-  }
-  
-  /* Ảnh bên trong: Chiếm toàn bộ khung div bọc ngoài và dùng scale để zoom */
-  .club-logo {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transform: scale(1.1); /* Chỉnh con số này lớn hơn 1 để zoom (VD: 1.3 = zoom 130%) */
-  }
+    .logo-wrapper {
+      flex: none;
+      width: 96px;
+      height: 96px;
+      margin-left: auto;
+      border-radius: 50%;
+      background: #070d1b;
+      box-shadow: 0 0 0 4px rgba(24, 38, 61, 0.9), 0 0 0 11px rgba(59, 130, 246, 0.22), 0 14px 30px -8px rgba(0, 0, 0, .45);
+      overflow: hidden; /* Cực kỳ quan trọng: Cắt đi phần ảnh bị phóng to tràn ra ngoài viền tròn */
+    }
+
+    /* Ảnh bên trong: Chiếm toàn bộ khung div bọc ngoài và dùng scale để zoom */
+    .club-logo {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(1.1); /* Chỉnh con số này lớn hơn 1 để zoom (VD: 1.3 = zoom 130%) */
+    }
 
     .eyebrow {
       font: 600 12px/1 var(--body);
@@ -198,10 +199,9 @@
         white-space: nowrap;
       }
 
-      .club-logo {
+      .logo-wrapper {
         width: 64px;
         height: 64px;
-        padding: 5px;
         margin-top: 4px;
         box-shadow: 0 0 0 3px rgba(24, 38, 61, 0.9), 0 0 0 8px rgba(59, 130, 246, 0.22), 0 10px 24px -8px rgba(0, 0, 0, .45);
       }
