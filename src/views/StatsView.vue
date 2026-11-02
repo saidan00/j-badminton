@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, provide, reactive, ref, shallowRef } from 'vue';
+import { computed, onMounted, provide, ref, shallowRef } from 'vue';
 import RankingTable from '@/components/stats/RankingTable.vue';
 import StatsFilters from '@/components/stats/StatsFilters.vue';
 import TournamentCard from '@/components/stats/TournamentCard.vue';
@@ -10,15 +10,18 @@ const tournaments = shallowRef([]);
 const errors = ref([]);
 const loadError = ref('');
 const loading = ref(true);
-const filter = reactive({ type: 'all', year: 'all' });
+const filter = ref({ type: 'all', year: 'all' });
 
 const nameOf = (id) => players.value.get(id)?.name ?? id;
 provide('nameOf', nameOf);
 provide('players', { get: (id) => players.value.get(id) });
 
 const years = computed(() => [...new Set(tournaments.value.map((t) => t.date.slice(0, 4)))].sort().reverse());
-const filtered = computed(() => tournaments.value.filter((t) => (filter.type === 'all' || t.type === filter.type)
-  && (filter.year === 'all' || t.date.startsWith(filter.year))));
+const filtered = computed(() => {
+  const { type, year } = filter.value;
+  return tournaments.value.filter((t) => (type === 'all' || t.type === type)
+    && (year === 'all' || t.date.startsWith(year)));
+});
 const stats = computed(() => buildStats(filtered.value));
 const history = computed(() => [...filtered.value].sort((x, y) => y.date.localeCompare(x.date)));
 

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import ResultPanel from '@/components/split/ResultPanel.vue';
 import SplitForm from '@/components/split/SplitForm.vue';
 import { storage } from '@/lib/browser.js';
@@ -13,7 +13,7 @@ function loadSaved() {
 }
 
 const saved = { ...DEFAULTS, ...loadSaved() };
-const inputs = reactive(Object.fromEntries(Object.keys(DEFAULTS).map((key) => [key, Number(saved[key]) || 0])));
+const inputs = ref(Object.fromEntries(Object.keys(DEFAULTS).map((key) => [key, Number(saved[key]) || 0])));
 
 const error = ref('');
 const result = ref(null);
@@ -23,21 +23,21 @@ const form = ref(null);
 const panel = ref(null);
 
 function calculate(withAnimation) {
-  if (inputs.men + inputs.women === 0) {
+  if (inputs.value.men + inputs.value.women === 0) {
     error.value = 'Cần ít nhất 1 người chơi mới chia được nha!';
     return false;
   }
   error.value = '';
   animate.value = withAnimation;
-  result.value = split({ ...inputs });
+  result.value = split({ ...inputs.value });
   return true;
 }
 
 // Đã bấm tính một lần thì kết quả tự cập nhật theo ô nhập.
 watch(inputs, () => {
-  storage.set(STORAGE_KEY, JSON.stringify(inputs));
+  storage.set(STORAGE_KEY, JSON.stringify(inputs.value));
   if (result.value) calculate(false);
-});
+}, { deep: true });
 
 function onSubmit() {
   if (!calculate(true)) return;
