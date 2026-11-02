@@ -1,3 +1,4 @@
+import { t, upper } from '@/i18n.js';
 import { dec, num, vnd } from './format.js';
 
 export const SHUTTLES_PER_TUBE = 12;
@@ -5,11 +6,11 @@ export const WOMEN_RATIO = 0.8;
 export const ROUND_STEP = 500;
 export const DEFAULTS = { men: 4, women: 2, court: 240000, shuttles: 3, tubePrice: 325000, water: 0 };
 
-export const SPLIT_RULES = [
-  'Nam ×1.0',
-  `Nữ ×${WOMEN_RATIO}`,
-  'Nước: chỉ chia nam',
-  `Làm tròn lên ${num(ROUND_STEP)}đ`,
+export const splitRules = () => [
+  t('split.rules.men'),
+  t('split.rules.women', { ratio: WOMEN_RATIO }),
+  t('split.rules.water'),
+  t('split.rules.rounding', { step: num(ROUND_STEP) }),
 ];
 
 export const roundUp = (n) => Math.ceil(n / ROUND_STEP - 1e-9) * ROUND_STEP;
@@ -39,16 +40,19 @@ export function split({ men, women, court, shuttles, tubePrice, water }) {
   };
 }
 
+export const shuttleNote = (r) => `${r.shuttles}/${SHUTTLES_PER_TUBE} × ${num(r.tubePrice)}`;
+export const surplusNote = (r) => (r.surplus > 0.5 ? t('split.receipt.surplus', { amount: vnd(r.surplus) }) : '');
+
 // Các dòng "Cách tính" dùng chung cho trang và ảnh kết quả.
 export function howRows(r) {
   const rows = [
-    ['Tổng hệ số', `${r.men} + ${r.women}×${WOMEN_RATIO} = ${dec(r.weight)}`],
-    ['Tiền 1 hệ số', `${num(r.pool)} / ${dec(r.weight)} = ${vnd(r.unit)}`],
+    [t('split.how.weight'), `${r.men} + ${r.women}×${WOMEN_RATIO} = ${dec(r.weight)}`],
+    [t('split.how.unit'), `${num(r.pool)} / ${dec(r.weight)} = ${vnd(r.unit)}`],
   ];
   if (r.water > 0) {
     rows.push(r.waterToMen
-      ? ['Nước mỗi nam', `${num(r.water)} / ${r.men} = ${vnd(r.waterEach)}`]
-      : ['Tiền nước', 'không có nam → chia chung']);
+      ? [t('split.how.waterEach'), `${num(r.water)} / ${r.men} = ${vnd(r.waterEach)}`]
+      : [t('split.how.water'), t('split.how.waterShared')]);
   }
   return rows;
 }
@@ -64,24 +68,25 @@ export function payFormulas(r) {
 }
 
 export function summary(r) {
+  const line = (label, value) => `${label}: ${value}`;
   const lines = [
-    '🏸 CHIA TIỀN CẦU LÔNG',
+    `🏸 ${upper(`${t('split.title')} ${t('split.accent')}`)}`,
     '',
-    `Tiền sân: ${vnd(r.court)}`,
-    `Tiền cầu: ${r.shuttles}/${SHUTTLES_PER_TUBE} × ${num(r.tubePrice)} = ${vnd(r.shuttleCost)}`,
-    `Tiền nước: ${vnd(r.water)}`,
+    line(t('split.receipt.court'), vnd(r.court)),
+    line(t('split.receipt.shuttles'), `${shuttleNote(r)} = ${vnd(r.shuttleCost)}`),
+    line(t('split.receipt.water'), vnd(r.water)),
     '──────────────',
-    `Tổng tiền: ${vnd(r.total)}`,
+    line(t('split.receipt.total'), vnd(r.total)),
     '',
-    `Nam: ${r.men} người`,
-    `Nữ: ${r.women} người`,
+    line(t('split.men'), t('split.people', r.men)),
+    line(t('split.women'), t('split.people', r.women)),
     '',
-    `Tổng hệ số: ${dec(r.weight)}`,
-    `Tiền 1 hệ số: ${vnd(r.unit)}`,
+    line(t('split.how.weight'), dec(r.weight)),
+    line(t('split.how.unit'), vnd(r.unit)),
   ];
-  if (r.waterToMen && r.water > 0) lines.push(`Nước mỗi nam: ${vnd(r.waterEach)}`);
+  if (r.waterToMen && r.water > 0) lines.push(line(t('split.how.waterEach'), vnd(r.waterEach)));
   lines.push('');
-  if (r.men) lines.push(`👨 Nam: ${vnd(r.menPay)}/người`);
-  if (r.women) lines.push(`👩 Nữ: ${vnd(r.womenPay)}/người`);
+  if (r.men) lines.push(`👨 ${line(t('split.men'), t('split.qr.perPerson', { amount: vnd(r.menPay) }))}`);
+  if (r.women) lines.push(`👩 ${line(t('split.women'), t('split.qr.perPerson', { amount: vnd(r.womenPay) }))}`);
   return lines.join('\n');
 }

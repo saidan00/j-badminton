@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { vnd } from '@/lib/format.js';
 import CountUp from './CountUp.vue';
 
@@ -8,11 +9,13 @@ const props = defineProps({
   animate: Boolean,
 });
 
+const { t } = useI18n();
+
 const teams = computed(() => {
   const r = props.result;
   return [
-    { kind: 'men', name: 'Nam', count: r?.men, pay: r?.menPay },
-    { kind: 'women', name: 'Nữ', count: r?.women, pay: r?.womenPay },
+    { kind: 'men', count: r?.men, pay: r?.menPay },
+    { kind: 'women', count: r?.women, pay: r?.womenPay },
   ];
 });
 </script>
@@ -20,20 +23,25 @@ const teams = computed(() => {
 <template>
   <div class="board">
     <div class="board-top">
-      <span class="live" :class="{ 'is-idle': !result }"><i></i>Kết quả</span>
-      <span class="board-total">Tổng<b>{{ result ? vnd(result.total) : '—' }}</b></span>
+      <span class="live" :class="{ 'is-idle': !result }"><i></i>{{ t('split.result') }}</span>
+      <span class="board-total">{{ t('split.total') }}<b>{{ result ? vnd(result.total) : '—' }}</b></span>
     </div>
     <div class="teams">
       <template v-for="(team, i) in teams" :key="team.kind">
         <div v-if="i > 0" class="net" aria-hidden="true"></div>
         <div class="team" :class="[`team--${team.kind}`, { 'is-empty': result && !team.count }]">
-          <div class="team-name">{{ team.name }}<small>{{ result ? team.count : '—' }} người</small></div>
+          <div class="team-name">
+            {{ t(`split.${team.kind}`) }}
+            <small>{{ result ? t('split.people', team.count) : t('split.peopleUnknown') }}</small>
+          </div>
           <CountUp class="score" :value="team.count ? team.pay : null" :animate="animate" />
-          <div class="per">đ / người</div>
+          <div class="per">{{ t('split.perPerson') }}</div>
         </div>
       </template>
     </div>
-    <p v-if="!result" class="idle-msg">Nhập thông tin rồi bấm <b>Tính tiền</b> nhé</p>
+    <i18n-t v-if="!result" keypath="split.idle" tag="p" class="idle-msg">
+      <template #action><b>{{ t('split.calculate') }}</b></template>
+    </i18n-t>
   </div>
 </template>
 

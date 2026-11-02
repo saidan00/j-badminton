@@ -1,8 +1,9 @@
 import { DATA_URL } from '@/config.js';
+import { t } from '@/i18n.js';
 
 // Dưới số trận này thì vẫn hiện nhưng chưa xếp hạng, tránh 1 trận thắng 1 là 100%.
 export const MIN_MATCHES = 4;
-export const TYPE_LABEL = { monthly: 'Giải tháng', quarterly: 'Giải quý' };
+export const TYPES = ['monthly', 'quarterly'];
 const SIDES = ['a', 'b'];
 
 export const rate = (s) => s.won / s.played;
@@ -18,51 +19,55 @@ export function fmtDate(iso) {
   return `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
 }
 
-export function titleOf(t) {
-  if (t.name) return t.name;
-  const { y, m } = parseDate(t.date);
-  return t.type === 'quarterly' ? `Giải quý ${Math.ceil(m / 3)}/${y}` : `Giải tháng ${m}/${y}`;
+export function titleOf(tournament) {
+  if (tournament.name) return tournament.name;
+  const { y, m } = parseDate(tournament.date);
+  return tournament.type === 'quarterly'
+    ? t('stats.tournament.quarterly', { q: Math.ceil(m / 3), y })
+    : t('stats.tournament.monthly', { m, y });
 }
 
 // JSON sửa tay nên dễ gõ sai: bỏ qua phần sai thay vì vỡ trang, và liệt kê lỗi để sửa.
+// Lỗi trả về dạng { key, params } để hiển thị theo ngôn ngữ đang chọn.
 export function validate(rawPlayers, rawTournaments) {
   const errors = [];
+  const fail = (key, params) => errors.push({ key: `stats.errors.${key}`, params });
   const map = new Map();
   for (const p of Array.isArray(rawPlayers) ? rawPlayers : []) {
     if (!p?.id || !p?.name) {
-      errors.push(`players.json: thiếu id hoặc name ở ${JSON.stringify(p)}`);
+      fail('playerMissing', { json: JSON.stringify(p) });
       continue;
     }
-    if (map.has(p.id)) errors.push(`players.json: trùng id "${p.id}"`);
+    if (map.has(p.id)) fail('playerDuplicate', { id: p.id });
     map.set(p.id, p);
   }
 
   const list = [];
   for (const t of Array.isArray(rawTournaments) ? rawTournaments : []) {
-    const label = `Giải ${t?.id ?? t?.date ?? '?'}`;
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(t?.date ?? '') || !TYPE_LABEL[t.type] || !Array.isArray(t.matches)) {
-      errors.push(`${label}: cần date dạng YYYY-MM-DD, type là monthly hoặc quarterly, và có matches`);
+    const label = t?.id ?? t?.date ?? '?';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(t?.date ?? '') || !TYPES.includes(t.type) || !Array.isArray(t.matches)) {
+      fail('tournament', { label });
       continue;
     }
     const matches = t.matches.filter((m, i) => {
-      const where = `${label}, trận ${i + 1}`;
+      const where = { label, n: i + 1 };
       const sides = [m?.a, m?.b];
       if (!sides.every((s) => Array.isArray(s) && s.length >= 1 && s.length <= 2)) {
-        errors.push(`${where}: a và b phải có 1–2 người`);
+        fail('sides', where);
         return false;
       }
       const unknown = sides.flat().filter((id) => !map.has(id));
       if (unknown.length) {
-        errors.push(`${where}: không có ${unknown.map((u) => `"${u}"`).join(', ')} trong players.json`);
+        fail('unknown', { ...where, ids: unknown.map((u) => `"${u}"`).join(', ') });
         return false;
       }
       if (new Set(sides.flat()).size !== sides.flat().length) {
-        errors.push(`${where}: một người xuất hiện 2 lần`);
+        fail('duplicate', where);
         return false;
       }
       const s = m.score;
       if (!Array.isArray(s) || s.length !== 2 || !s.every(Number.isInteger) || s[0] === s[1]) {
-        errors.push(`${where}: score phải là [điểm A, điểm B] và không hoà`);
+        fail('score', where);
         return false;
       }
       return true;
@@ -153,8 +158,8 @@ export async function loadStatsData() {
   const urls = ['players.json', 'tournaments.json'].map((f) => DATA_URL + f);
   const [rawPlayers, rawTournaments] = await Promise.all(urls.map(async (url) => {
     const res = await fetch(url, { cache: 'no-cache' });
-    if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
-    return res.json().catch((err) => { throw new Error(`${url}: JSON sai cú pháp (${err.message})`); });
+    if (!res.ok) throw new Error(t('stats.errors.http', { url, status: res.status }));
+    return res.json().catch((err) => { throw new Error(t('stats.errors.json', { url, message: err.message })); });
   }));
   const data = validate(rawPlayers, rawTournaments);
   return {

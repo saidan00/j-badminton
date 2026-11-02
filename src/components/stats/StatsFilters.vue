@@ -1,18 +1,29 @@
 <script setup>
 import { computed } from 'vue';
-import { TYPE_LABEL } from '@/lib/stats.js';
+import { useI18n } from 'vue-i18n';
+import { TYPES } from '@/lib/stats.js';
 
 const filter = defineModel({ type: Object, required: true });
 const props = defineProps({ years: { type: Array, required: true } });
 
+const { t } = useI18n();
+
 const groups = computed(() => [
-  { key: 'type', label: 'Loại giải', options: [['all', 'Tất cả'], ...Object.entries(TYPE_LABEL)] },
-  { key: 'year', label: 'Năm', options: [['all', 'Tất cả'], ...props.years.map((y) => [y, y])] },
+  {
+    key: 'type',
+    label: t('stats.filters.type'),
+    options: [['all', t('stats.filters.all')], ...TYPES.map((type) => [type, t(`stats.type.${type}`)])],
+  },
+  {
+    key: 'year',
+    label: t('stats.filters.year'),
+    options: [['all', t('stats.filters.all')], ...props.years.map((y) => [y, y])],
+  },
 ]);
 </script>
 
 <template>
-  <nav class="filters" aria-label="Bộ lọc">
+  <nav class="filters" :aria-label="t('stats.filters.label')">
     <div v-for="group in groups" :key="group.key" class="seg" role="group" :aria-label="group.label">
       <span class="seg-label">{{ group.label }}</span>
       <button v-for="[value, text] in group.options" :key="value" type="button"

@@ -1,4 +1,5 @@
 <script setup>
+import { useI18n } from 'vue-i18n';
 import ChevronIcon from '@/components/icons/ChevronIcon.vue';
 import { fmtDate, titleOf } from '@/lib/stats.js';
 import PlayerNames from './PlayerNames.vue';
@@ -8,6 +9,7 @@ defineProps({
   open: Boolean,
 });
 
+const { t } = useI18n();
 const SIDES = ['a', 'b'];
 const aWon = (m) => m.score[0] > m.score[1];
 </script>
@@ -16,7 +18,7 @@ const aWon = (m) => m.score[0] > m.score[1];
   <details class="card tourney" :open="open">
     <summary class="board">
       <div class="board-top">
-        <span>{{ titleOf(tournament) }}<template v-if="!tournament.result.winner"> · <b>Hoà</b></template></span>
+        <span>{{ titleOf(tournament) }}<template v-if="!tournament.result.winner"> · <b>{{ t('stats.history.draw') }}</b></template></span>
         <span class="board-date">{{ fmtDate(tournament.date) }}
           <ChevronIcon />
         </span>
@@ -29,13 +31,13 @@ const aWon = (m) => m.score[0] > m.score[1];
             'is-lose': tournament.result.winner && tournament.result.winner !== side,
           }]">
             <div class="team-name">
-              {{ tournament.teams?.[side] ?? `Đội ${side.toUpperCase()}` }}
+              {{ tournament.teams?.[side] ?? t('stats.history.team', { side: side.toUpperCase() }) }}
               <small>
                 <PlayerNames :ids="[...tournament.result.rosters[side]]" sep=" · " />
               </small>
             </div>
             <div class="score">{{ tournament.result.wins[side] }}</div>
-            <span v-if="tournament.result.winner === side" class="win-tag">Thắng</span>
+            <span v-if="tournament.result.winner === side" class="win-tag">{{ t('stats.history.win') }}</span>
           </div>
         </template>
       </div>
@@ -48,7 +50,7 @@ const aWon = (m) => m.score[0] > m.score[1];
         </span>
         <span class="m-score">
           <b :class="{ win: aWon(m) }">{{ m.score[0] }}</b>–<b :class="{ win: !aWon(m) }">{{ m.score[1] }}</b>
-          <small v-if="m.decider">Quyết định</small>
+          <small v-if="m.decider">{{ t('stats.history.decider') }}</small>
         </span>
         <span class="m-side m-b" :class="{ win: !aWon(m) }">
           <PlayerNames :ids="m.b" />

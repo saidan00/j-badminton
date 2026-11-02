@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { digits, num } from '@/lib/format.js';
 
 const model = defineModel({ type: Number, required: true });
@@ -13,6 +14,12 @@ const text = ref(show(model.value));
 
 watch(model, (v) => {
   if ((Number(digits(text.value)) || 0) !== v) text.value = show(v);
+});
+
+// Đổi ngôn ngữ thì đổi luôn dấu phân cách hàng nghìn (240.000 ↔ 240,000).
+const { locale } = useI18n();
+watch(locale, () => {
+  text.value = show(model.value);
 });
 
 // Định dạng 240.000 khi gõ, giữ nguyên vị trí con trỏ.

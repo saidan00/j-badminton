@@ -1,30 +1,46 @@
 <script setup>
+import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
-import { CLUB_NAME, LOGO_URL } from '@/config.js';
+import { LOGO_URL } from '@/config.js';
 import ShuttleIcon from './icons/ShuttleIcon.vue';
+import LanguageSwitch from './LanguageSwitch.vue';
 
+const { t } = useI18n();
 const route = useRoute();
+
+const page = computed(() => route.meta.i18nKey ?? 'split');
+const chips = computed(() => route.meta.chips?.() ?? []);
 </script>
 
 <template>
+  <div class="topbar">
+    <LanguageSwitch />
+  </div>
   <header class="hero">
     <div class="logo">
       <ShuttleIcon />
     </div>
     <div>
-      <p class="eyebrow">{{ CLUB_NAME }}</p>
-      <h1>{{ route.meta.title }} <span>{{ route.meta.accent }}</span></h1>
-      <div v-if="route.meta.chips?.length" class="chips">
-        <span v-for="chip in route.meta.chips" :key="chip" class="chip">{{ chip }}</span>
+      <p class="eyebrow">{{ t('club') }}</p>
+      <h1>{{ t(`${page}.title`) }} <span>{{ t(`${page}.accent`) }}</span></h1>
+      <div v-if="chips.length" class="chips">
+        <span v-for="chip in chips" :key="chip" class="chip">{{ chip }}</span>
       </div>
     </div>
     <div class="logo-wrapper">
-      <img class="club-logo" :alt="CLUB_NAME" :src="LOGO_URL">
+      <img class="club-logo" :alt="t('club')" :src="LOGO_URL">
     </div>
   </header>
 </template>
 
 <style scoped>
+.topbar {
+  display: flex;
+  justify-content: flex-end;
+  margin: -14px 0 10px;
+}
+
 .hero {
   display: flex;
   align-items: center;

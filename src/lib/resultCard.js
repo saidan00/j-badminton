@@ -1,9 +1,9 @@
 // Vẽ ảnh kết quả chia tiền bằng canvas để copy/chia sẻ vào nhóm chat.
-import { CLUB_NAME } from '@/config.js';
+import { t, upper } from '@/i18n.js';
 import { loadImage } from './browser.js';
 import { num, vnd } from './format.js';
 import { SHUTTLE } from './shuttle.js';
-import { howRows, payFormulas, ROUND_STEP, SHUTTLES_PER_TUBE, WOMEN_RATIO } from './split.js';
+import { howRows, payFormulas, ROUND_STEP, shuttleNote, surplusNote, WOMEN_RATIO } from './split.js';
 
 const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
 
@@ -14,7 +14,7 @@ const rgba = (hex, a) => {
 
 function fontsReady() {
   if (!document.fonts) return Promise.resolve();
-  const sample = 'CHIA TIỀN CẦU LÔNG Nữ người đ 0123456789';
+  const sample = 'CHIA TIỀN CẦU LÔNG BADMINTON Nữ người đ 0123456789';
   const display = token('display');
   const body = token('body');
   const loads = [
@@ -56,11 +56,11 @@ function drawCard(r, qr, logo) {
   const formulas = payFormulas(r);
   const teams = [
     r.men && {
-      name: 'NAM', label: 'Nam', count: r.men, pay: r.menPay, formula: formulas.men,
+      label: t('split.men'), count: r.men, pay: r.menPay, formula: formulas.men,
       color: token('men'), tone: token('men-ink'),
     },
     r.women && {
-      name: 'NỮ', label: 'Nữ', count: r.women, pay: r.womenPay, formula: formulas.women,
+      label: t('split.women'), count: r.women, pay: r.womenPay, formula: formulas.women,
       color: token('women'), tone: token('women-ink'),
     },
   ].filter(Boolean);
@@ -74,7 +74,7 @@ function drawCard(r, qr, logo) {
   // "Cách tính" đầy đủ như trên trang: hệ số, tiền nước rồi công thức Nam/Nữ.
   const how = [
     ...howRows(r).map(([label, value]) => [label, value, ink]),
-    ...teams.map((t) => [t.label, t.formula, t.tone]),
+    ...teams.map((team) => [team.label, team.formula, team.tone]),
   ];
   const RECEIPT_H = 520 + (how.length - 1) * 44 + 44;
   const QR_H = qr ? Math.max(qh, 320) + 80 : 0;
@@ -180,17 +180,19 @@ function drawCard(r, qr, logo) {
 
   const tx = P + 170;
   const textMax = (logo ? rx - 82 - 24 : W - P) - tx;
-  text(CLUB_NAME.toLocaleUpperCase('vi'), tx, y + 44, `600 24px ${body}`, lime, { spacing: 4, max: textMax });
+  text(upper(t('club')), tx, y + 44, `600 24px ${body}`, lime, { spacing: 4, max: textMax });
 
+  const title = `${upper(t('split.title'))} `;
+  const accent = upper(t('split.accent'));
   let size = 92;
   const fitTitle = () => `italic 800 ${size}px ${display}`;
   ctx.font = fitTitle();
-  while (ctx.measureText('CHIA TIỀN CẦU LÔNG').width > textMax && size > 50) {
+  while (ctx.measureText(title + accent).width > textMax && size > 50) {
     size -= 2;
     ctx.font = fitTitle();
   }
-  const w1 = text('CHIA TIỀN ', tx, y + 136, fitTitle(), '#fff');
-  text('CẦU LÔNG', tx + w1, y + 136, fitTitle(), lime);
+  const w1 = text(title, tx, y + 136, fitTitle(), '#fff');
+  text(accent, tx + w1, y + 136, fitTitle(), lime);
 
   // Bảng tỉ số
   y = P + HEAD_H;
@@ -214,30 +216,31 @@ function drawCard(r, qr, logo) {
   ctx.shadowBlur = 14;
   circle(P + 44, y + 52, 7, lime);
   ctx.restore();
-  text('KẾT QUẢ', P + 64, y + 60, `700 22px ${body}`, 'rgba(255, 255, 255, .7)', { spacing: 4 });
+  text(upper(t('split.result')), P + 64, y + 60, `700 22px ${body}`, 'rgba(255, 255, 255, .7)', { spacing: 4 });
   const totalW = text(vnd(r.total), P + BW - 40, y + 63, `700 38px ${display}`, lime, { align: 'right' });
-  text('TỔNG', P + BW - 40 - totalW - 14, y + 60, `700 22px ${body}`, 'rgba(255, 255, 255, .7)', { align: 'right', spacing: 4 });
+  text(upper(t('split.total')), P + BW - 40 - totalW - 14, y + 60, `700 22px ${body}`, 'rgba(255, 255, 255, .7)',
+    { align: 'right', spacing: 4 });
   ctx.fillStyle = 'rgba(255, 255, 255, .09)';
   ctx.fillRect(P + 40, y + 92, BW - 80, 1.5);
 
   const colW = BW / teams.length;
-  teams.forEach((t, i) => {
+  teams.forEach((team, i) => {
     const cx = P + colW * i + colW / 2;
     ctx.save();
-    ctx.shadowColor = t.color;
+    ctx.shadowColor = team.color;
     ctx.shadowBlur = 16;
-    ctx.fillStyle = t.color;
+    ctx.fillStyle = team.color;
     roundRect(cx - 32, y + 126, 64, 8, 4);
     ctx.fill();
     ctx.restore();
-    text(t.name, cx, y + 184, `800 46px ${display}`, '#fff', { align: 'center', spacing: 7 });
-    text(`${t.count} người`, cx, y + 222, `500 24px ${body}`, 'rgba(255, 255, 255, .55)', { align: 'center' });
+    text(upper(team.label), cx, y + 184, `800 46px ${display}`, '#fff', { align: 'center', spacing: 7 });
+    text(t('split.people', team.count), cx, y + 222, `500 24px ${body}`, 'rgba(255, 255, 255, .55)', { align: 'center' });
     ctx.save();
-    ctx.shadowColor = rgba(t.color, .55);
+    ctx.shadowColor = rgba(team.color, .55);
     ctx.shadowBlur = 40;
-    text(num(t.pay), cx, y + 340, `700 136px ${display}`, '#fff', { align: 'center', max: colW - 48 });
+    text(num(team.pay), cx, y + 340, `700 136px ${display}`, '#fff', { align: 'center', max: colW - 48 });
     ctx.restore();
-    text('đ / người', cx, y + 376, `500 24px ${body}`, 'rgba(255, 255, 255, .55)', { align: 'center' });
+    text(t('split.perPerson'), cx, y + 376, `500 24px ${body}`, 'rgba(255, 255, 255, .55)', { align: 'center' });
   });
   if (teams.length === 2) {
     ctx.save();
@@ -255,11 +258,11 @@ function drawCard(r, qr, logo) {
   y += BOARD_H + GAP;
   panel(P, y, BW, RECEIPT_H, paper);
   const ix = P + 48, ir = P + BW - 48;
-  text('CHI PHÍ', ix, y + 70, `800 26px ${display}`, muted, { spacing: 5 });
+  text(upper(t('split.receipt.costs')), ix, y + 70, `800 26px ${display}`, muted, { spacing: 5 });
   const rows = [
-    ['Tiền sân', vnd(r.court)],
-    ['Tiền cầu', vnd(r.shuttleCost), `${r.shuttles}/${SHUTTLES_PER_TUBE} × ${num(r.tubePrice)}`],
-    ['Tiền nước', vnd(r.water)],
+    [t('split.receipt.court'), vnd(r.court)],
+    [t('split.receipt.shuttles'), vnd(r.shuttleCost), shuttleNote(r)],
+    [t('split.receipt.water'), vnd(r.water)],
   ];
   rows.forEach(([label, value, note], i) => {
     const ry = y + 132 + i * 62;
@@ -269,14 +272,15 @@ function drawCard(r, qr, logo) {
   });
   ctx.fillStyle = ink;
   ctx.fillRect(ix, y + 290, ir - ix, 4);
-  text('TỔNG TIỀN', ix, y + 360, `700 28px ${body}`, ink, { spacing: 3 });
+  text(upper(t('split.receipt.total')), ix, y + 360, `700 28px ${body}`, ink, { spacing: 3 });
   text(vnd(r.total), ir, y + 364, `700 66px ${display}`, ink, { align: 'right' });
 
   ctx.fillStyle = token('paper-2');
   roundRect(ix - 18, y + 392, ir - ix + 36, 72, 18);
   ctx.fill();
-  text('Thu về sau làm tròn', ix, y + 438, `500 26px ${body}`, muted);
-  const collected = vnd(r.collected) + (r.surplus > 0.5 ? ` · dư ${vnd(r.surplus)}` : '');
+  text(t('split.receipt.collected'), ix, y + 438, `500 26px ${body}`, muted);
+  const surplus = surplusNote(r);
+  const collected = vnd(r.collected) + (surplus ? ` ${surplus}` : '');
   text(collected, ir, y + 438, `600 26px ${body}`, ink, { align: 'right' });
 
   how.forEach(([label, value, color], i) => {
@@ -302,23 +306,24 @@ function drawCard(r, qr, logo) {
     const tx2 = qx + qw + 44;
     const maxW = P + BW - 40 - tx2;
     const ty = y + (QR_H - 300) / 2;
-    text('QUÉT QR', tx2, ty + 52, `italic 800 60px ${display}`, ink, { max: maxW });
-    text('CHUYỂN KHOẢN', tx2, ty + 112, `italic 800 60px ${display}`, ink, { max: maxW });
-    text('Nội dung: tên + “cầu lông”', tx2, ty + 158, `500 24px ${body}`, muted, { max: maxW });
-    teams.forEach((t, i) => {
+    text(t('split.qr.cardLine1'), tx2, ty + 52, `italic 800 60px ${display}`, ink, { max: maxW });
+    text(t('split.qr.cardLine2'), tx2, ty + 112, `italic 800 60px ${display}`, ink, { max: maxW });
+    text(t('split.qr.note'), tx2, ty + 158, `500 24px ${body}`, muted, { max: maxW });
+    teams.forEach((team, i) => {
       const ay = ty + 230 + i * 60;
-      circle(tx2 + 8, ay - 10, 8, t.color);
-      const lw = text(t.label, tx2 + 28, ay, `500 28px ${body}`, ink);
+      circle(tx2 + 8, ay - 10, 8, team.color);
+      const lw = text(team.label, tx2 + 28, ay, `500 28px ${body}`, ink);
       const ax = tx2 + 28 + Math.max(lw, 50) + 14;
-      text(`${vnd(t.pay)}/người`, ax, ay + 2, `700 42px ${display}`, t.tone, { max: P + BW - 40 - ax });
+      text(t('split.qr.perPerson', { amount: vnd(team.pay) }), ax, ay + 2, `700 42px ${display}`, team.tone,
+        { max: P + BW - 40 - ax });
     });
     y += QR_H;
   }
 
   // Footer
-  const rules = `Nam ×1.0 · Nữ ×${WOMEN_RATIO} · Nước chỉ chia nam · Làm tròn lên ${num(ROUND_STEP)}đ`;
-  text(rules, W / 2, y + 62, `500 22px ${body}`, 'rgba(255, 255, 255, .6)', { align: 'center' });
-  text('🏸 Bạn thanh toán, host thank you', W / 2, y + 98, `600 22px ${body}`, 'rgba(255, 255, 255, .85)', { align: 'center' });
+  const rules = t('split.cardRules', { ratio: WOMEN_RATIO, step: num(ROUND_STEP) });
+  text(rules, W / 2, y + 62, `500 22px ${body}`, 'rgba(255, 255, 255, .6)', { align: 'center', max: BW });
+  text(t('split.cardThanks'), W / 2, y + 98, `600 22px ${body}`, 'rgba(255, 255, 255, .85)', { align: 'center' });
 
   return canvas;
 }

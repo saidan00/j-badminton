@@ -1,5 +1,6 @@
 <script setup>
 import { computed, inject, reactive } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ChevronIcon from '@/components/icons/ChevronIcon.vue';
 import FemaleIcon from '@/components/icons/FemaleIcon.vue';
 import { pct } from '@/lib/format.js';
@@ -11,6 +12,7 @@ const props = defineProps({
   loading: Boolean,
 });
 
+const { t } = useI18n();
 const nameOf = inject('nameOf');
 const players = inject('players');
 const expanded = reactive(new Set());
@@ -27,21 +29,21 @@ function toggle(id) {
 <template>
   <section class="card section">
     <div class="sec-title">
-      <h2><em>01</em>Bảng xếp hạng</h2>
-      <p>Theo tỉ lệ thắng, từ {{ MIN_MATCHES }} trận</p>
+      <h2><em>01</em>{{ t('stats.ranking.title') }}</h2>
+      <p>{{ t('stats.ranking.hint', { n: MIN_MATCHES }) }}</p>
     </div>
     <table class="lb">
       <thead>
         <tr>
           <th scope="col">#</th>
-          <th scope="col" class="who">Người chơi</th>
-          <th scope="col" title="Số trận thắng / tổng số trận">Thắng</th>
-          <th scope="col">Tỉ lệ</th>
+          <th scope="col" class="who">{{ t('stats.ranking.player') }}</th>
+          <th scope="col" :title="t('stats.ranking.winsHint')">{{ t('stats.ranking.wins') }}</th>
+          <th scope="col">{{ t('stats.ranking.rate') }}</th>
         </tr>
       </thead>
       <tbody>
         <tr v-if="!rows.length">
-          <td colspan="4" class="empty">{{ loading ? 'Đang tải…' : 'Chưa có trận nào.' }}</td>
+          <td colspan="4" class="empty">{{ t(loading ? 'stats.ranking.loading' : 'stats.ranking.empty') }}</td>
         </tr>
         <template v-for="{ s, isLow, rank } in rows" :key="s.id">
           <tr class="row" :class="{ 'is-low': isLow, 'is-top': rank === 1 }">
@@ -64,7 +66,7 @@ function toggle(id) {
         </template>
       </tbody>
     </table>
-    <p v-if="hasLow" class="lb-note">Chữ mờ: chưa đủ {{ MIN_MATCHES }} trận nên chưa xếp hạng.</p>
+    <p v-if="hasLow" class="lb-note">{{ t('stats.ranking.lowNote', { n: MIN_MATCHES }) }}</p>
   </section>
 </template>
 

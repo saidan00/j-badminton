@@ -1,10 +1,12 @@
 <script setup>
 import { computed, inject } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { bestPartner, titleOf } from '@/lib/stats.js';
 import PlayerNames from './PlayerNames.vue';
 
 const props = defineProps({ stat: { type: Object, required: true } });
 
+const { t } = useI18n();
 const nameOf = inject('nameOf');
 const best = computed(() => bestPartner(props.stat));
 const log = computed(() => [...props.stat.log].sort((x, y) => y.t.date.localeCompare(x.t.date) || x.i - y.i));
@@ -14,28 +16,34 @@ const log = computed(() => [...props.stat.log].sort((x, y) => y.t.date.localeCom
   <div class="pd">
     <dl class="pd-stats">
       <div>
-        <dt>Giải tham gia</dt>
+        <dt>{{ t('stats.detail.events') }}</dt>
         <dd>{{ stat.events }}</dd>
       </div>
       <div>
-        <dt>Đội thắng chung cuộc</dt>
+        <dt>{{ t('stats.detail.teamWins') }}</dt>
         <dd>{{ stat.teamWins }}/{{ stat.events }}</dd>
       </div>
       <div>
-        <dt>Đánh cặp ăn ý nhất</dt>
+        <dt>{{ t('stats.detail.bestPartner') }}</dt>
         <dd v-if="best">{{ nameOf(best[0]) }}<small>{{ best[1].won }}/{{ best[1].played }}</small></dd>
         <dd v-else>—</dd>
       </div>
     </dl>
     <ol class="pd-log">
       <li v-for="e in log" :key="`${e.t.id}-${e.i}`" :class="{ 'is-win': e.won }">
-        <span class="wl" :aria-label="e.won ? 'Thắng' : 'Thua'">{{ e.won ? 'T' : 'B' }}</span>
+        <span class="wl" :aria-label="t(e.won ? 'stats.detail.won' : 'stats.detail.lost')">
+          {{ t(e.won ? 'stats.detail.wonShort' : 'stats.detail.lostShort') }}
+        </span>
         <span class="pd-text">
-          <template v-if="e.partner">cùng <b>{{ nameOf(e.partner) }}</b></template>
-          <template v-else>Đánh đơn</template>
-          gặp
-          <PlayerNames :ids="e.opp" />
-          <small>{{ titleOf(e.t) }} · trận {{ e.i + 1 }}{{ e.decider ? ' · quyết định' : '' }}</small>
+          <i18n-t :keypath="e.partner ? 'stats.detail.doubles' : 'stats.detail.singles'" tag="span">
+            <template #partner><b>{{ nameOf(e.partner) }}</b></template>
+            <template #opponents>
+              <PlayerNames :ids="e.opp" />
+            </template>
+          </i18n-t>
+          <small>
+            {{ t('stats.detail.match', { title: titleOf(e.t), n: e.i + 1 }) }}{{ e.decider ? t('stats.detail.decider') : '' }}
+          </small>
         </span>
         <span class="pd-score">{{ e.mine }}–{{ e.theirs }}</span>
       </li>

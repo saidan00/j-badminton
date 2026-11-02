@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import ShuttleIcon from '@/components/icons/ShuttleIcon.vue';
 import { dec, vnd } from '@/lib/format.js';
 import { shuttleCost, SHUTTLES_PER_TUBE, totalWeight, WOMEN_RATIO } from '@/lib/split.js';
@@ -8,20 +9,24 @@ import MoneyInput from './MoneyInput.vue';
 import NumberStepper from './NumberStepper.vue';
 
 const inputs = defineModel({ type: Object, required: true });
+// error là key i18n để đổi ngôn ngữ thì thông báo đổi theo.
 defineProps({ error: { type: String, default: '' } });
 const emit = defineEmits(['submit']);
 
+const { t } = useI18n();
 const cta = ref(null);
 
 const people = computed(() => inputs.value.men + inputs.value.women);
 const weight = computed(() => dec(totalWeight(inputs.value.men, inputs.value.women)));
 const shuttleHint = computed(() => {
   const { shuttles, tubePrice } = inputs.value;
-  return `${shuttles}/${SHUTTLES_PER_TUBE} ống = ${vnd(shuttleCost(shuttles, tubePrice))}`;
+  return t('split.shuttleHint', {
+    used: shuttles, per: SHUTTLES_PER_TUBE, cost: vnd(shuttleCost(shuttles, tubePrice)),
+  });
 });
 const waterHint = computed(() => (inputs.value.men === 0 && inputs.value.water > 0
-  ? 'Không có nam → chia chung theo hệ số'
-  : 'Chỉ chia cho nam'));
+  ? t('split.waterShared')
+  : t('split.waterMenOnly')));
 
 // Gọi lại animation "đập cầu" mỗi lần tính thành công.
 function smash() {
@@ -38,51 +43,55 @@ defineExpose({ smash });
   <form class="card" novalidate @submit.prevent="emit('submit')">
     <section class="section">
       <div class="sec-title">
-        <h2><em>01</em>Đội hình</h2>
+        <h2><em>01</em>{{ t('split.lineup') }}</h2>
       </div>
       <div class="lineup">
-        <LineupTile v-model="inputs.men" kind="men" name="Nam" ratio="×1.0" />
-        <LineupTile v-model="inputs.women" kind="women" name="Nữ" :ratio="`×${WOMEN_RATIO}`" />
+        <LineupTile v-model="inputs.men" kind="men" ratio="×1.0" />
+        <LineupTile v-model="inputs.women" kind="women" :ratio="`×${WOMEN_RATIO}`" />
       </div>
-      <p class="live-hint"><b>{{ people }}</b> người · tổng hệ số <b>{{ weight }}</b></p>
+      <i18n-t keypath="split.lineupHint" tag="p" class="live-hint" :plural="people">
+        <template #people><b>{{ people }}</b></template>
+        <template #weight><b>{{ weight }}</b></template>
+      </i18n-t>
     </section>
 
     <section class="section">
       <div class="sec-title">
-        <h2><em>02</em>Chi phí</h2>
+        <h2><em>02</em>{{ t('split.costs') }}</h2>
       </div>
       <div class="fields">
         <label class="field">
-          <span class="field-label">Tiền sân</span>
+          <span class="field-label">{{ t('split.court') }}</span>
           <MoneyInput v-model="inputs.court" />
         </label>
 
         <div class="row2">
           <div class="field">
-            <label class="field-label" for="shuttles">Số quả cầu</label>
-            <NumberStepper id="shuttles" v-model="inputs.shuttles" dec-label="Bớt 1 quả" inc-label="Thêm 1 quả" />
+            <label class="field-label" for="shuttles">{{ t('split.shuttles') }}</label>
+            <NumberStepper id="shuttles" v-model="inputs.shuttles" :dec-label="t('split.remove.shuttles')"
+              :inc-label="t('split.add.shuttles')" />
             <span class="hint">{{ shuttleHint }}</span>
           </div>
           <label class="field">
-            <span class="field-label">Giá 1 ống cầu</span>
+            <span class="field-label">{{ t('split.tubePrice') }}</span>
             <MoneyInput v-model="inputs.tubePrice" />
-            <span class="hint">1 ống = {{ SHUTTLES_PER_TUBE }} quả</span>
+            <span class="hint">{{ t('split.tubeSize', { n: SHUTTLES_PER_TUBE }) }}</span>
           </label>
         </div>
 
         <label class="field">
-          <span class="field-label">Tiền nước</span>
+          <span class="field-label">{{ t('split.water') }}</span>
           <MoneyInput v-model="inputs.water" placeholder="0" />
           <span class="hint">{{ waterHint }}</span>
         </label>
       </div>
     </section>
 
-    <p v-if="error" class="error" role="alert">{{ error }}</p>
+    <p v-if="error" class="error" role="alert">{{ t(error) }}</p>
 
     <button ref="cta" type="submit" class="cta">
       <ShuttleIcon />
-      Tính tiền
+      {{ t('split.calculate') }}
     </button>
   </form>
 </template>

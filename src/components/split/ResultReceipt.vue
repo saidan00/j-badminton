@@ -1,39 +1,41 @@
 <script setup>
 import { computed } from 'vue';
-import { num, vnd } from '@/lib/format.js';
-import { howRows, payFormulas, SHUTTLES_PER_TUBE } from '@/lib/split.js';
+import { useI18n } from 'vue-i18n';
+import { vnd } from '@/lib/format.js';
+import { howRows, payFormulas, shuttleNote, surplusNote } from '@/lib/split.js';
 
 const props = defineProps({ result: { type: Object, required: true } });
 
+const { t } = useI18n();
 const how = computed(() => howRows(props.result));
 const pay = computed(() => payFormulas(props.result));
 </script>
 
 <template>
   <div>
-    <p class="label">Chi phí</p>
-    <div class="r-row"><span>Tiền sân</span><b>{{ vnd(result.court) }}</b></div>
+    <p class="label">{{ t('split.receipt.costs') }}</p>
+    <div class="r-row"><span>{{ t('split.receipt.court') }}</span><b>{{ vnd(result.court) }}</b></div>
     <div class="r-row">
-      <span>Tiền cầu<small>{{ result.shuttles }}/{{ SHUTTLES_PER_TUBE }} × {{ num(result.tubePrice) }}</small></span>
+      <span>{{ t('split.receipt.shuttles') }}<small>{{ shuttleNote(result) }}</small></span>
       <b>{{ vnd(result.shuttleCost) }}</b>
     </div>
-    <div class="r-row"><span>Tiền nước</span><b>{{ vnd(result.water) }}</b></div>
-    <div class="r-row r-total"><span>Tổng tiền</span><b>{{ vnd(result.total) }}</b></div>
+    <div class="r-row"><span>{{ t('split.receipt.water') }}</span><b>{{ vnd(result.water) }}</b></div>
+    <div class="r-row r-total"><span>{{ t('split.receipt.total') }}</span><b>{{ vnd(result.total) }}</b></div>
     <div class="collected">
-      <span>Thu về sau làm tròn</span>
-      <span><b>{{ vnd(result.collected) }}</b> {{ result.surplus > 0.5 ? `· dư ${vnd(result.surplus)}` : '' }}</span>
+      <span>{{ t('split.receipt.collected') }}</span>
+      <span><b>{{ vnd(result.collected) }}</b> {{ surplusNote(result) }}</span>
     </div>
 
     <div class="how">
-      <p class="label">Cách tính</p>
+      <p class="label">{{ t('split.how.title') }}</p>
       <dl>
         <template v-for="[label, value] in how" :key="label">
           <dt>{{ label }}</dt>
           <dd>{{ value }}</dd>
         </template>
-        <dt>Nam</dt>
+        <dt>{{ t('split.men') }}</dt>
         <dd class="men">{{ pay.men ?? '—' }}</dd>
-        <dt>Nữ</dt>
+        <dt>{{ t('split.women') }}</dt>
         <dd class="women">{{ pay.women ?? '—' }}</dd>
       </dl>
     </div>

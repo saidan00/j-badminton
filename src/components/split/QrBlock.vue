@@ -1,11 +1,13 @@
 <script setup>
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQrImage } from '@/composables/useQrImage.js';
 import { useToast } from '@/composables/useToast.js';
 import { vnd } from '@/lib/format.js';
 
 defineProps({ result: { type: Object, required: true } });
 
+const { t } = useI18n();
 const { src, replace } = useQrImage();
 const toast = useToast();
 const fileInput = ref(null);
@@ -18,28 +20,32 @@ async function onFile(e) {
   if (!file) return;
   try {
     const saved = await replace(file);
-    toast.show(saved ? 'Đã lưu ảnh QR trên trình duyệt này ✓' : 'Đã đổi QR (chưa lưu được, mở lại trang sẽ mất)');
+    toast.show(t(saved ? 'split.qr.saved' : 'split.qr.notSaved'));
   } catch {
-    toast.show('Không đọc được ảnh này 😢');
+    toast.show(t('split.qr.unreadable'));
   }
 }
 </script>
 
 <template>
   <div class="qr-block">
-    <div class="qr-frame" role="button" tabindex="0" aria-label="Chọn ảnh QR" title="Bấm để chọn ảnh QR" @click="pick"
-      @keydown.enter.space.prevent="pick">
-      <img :src="src" alt="QR chuyển khoản">
+    <div class="qr-frame" role="button" tabindex="0" :aria-label="t('split.qr.pick')" :title="t('split.qr.pickHint')"
+      @click="pick" @keydown.enter.space.prevent="pick">
+      <img :src="src" :alt="t('split.qr.alt')">
     </div>
     <input ref="fileInput" type="file" accept="image/*" hidden @change="onFile">
     <div class="qr-text">
-      <h3>Quét QR chuyển khoản</h3>
-      <p>Nội dung: tên + “cầu lông”</p>
+      <h3>{{ t('split.qr.title') }}</h3>
+      <p>{{ t('split.qr.note') }}</p>
       <ul class="qr-amounts">
-        <li v-if="result.men" class="m">Nam <b>{{ vnd(result.menPay) }}/người</b></li>
-        <li v-if="result.women" class="w">Nữ <b>{{ vnd(result.womenPay) }}/người</b></li>
+        <li v-if="result.men" class="m">
+          {{ t('split.men') }} <b>{{ t('split.qr.perPerson', { amount: vnd(result.menPay) }) }}</b>
+        </li>
+        <li v-if="result.women" class="w">
+          {{ t('split.women') }} <b>{{ t('split.qr.perPerson', { amount: vnd(result.womenPay) }) }}</b>
+        </li>
       </ul>
-      <p class="qr-tip">Bấm vào QR để đổi ảnh</p>
+      <p class="qr-tip">{{ t('split.qr.tip') }}</p>
     </div>
   </div>
 </template>

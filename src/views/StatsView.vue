@@ -1,10 +1,12 @@
 <script setup>
 import { computed, onMounted, provide, ref, shallowRef } from 'vue';
+import { useI18n } from 'vue-i18n';
 import RankingTable from '@/components/stats/RankingTable.vue';
 import StatsFilters from '@/components/stats/StatsFilters.vue';
 import TournamentCard from '@/components/stats/TournamentCard.vue';
 import { buildStats, loadStatsData } from '@/lib/stats.js';
 
+const { t } = useI18n();
 const players = shallowRef(new Map());
 const tournaments = shallowRef([]);
 const errors = ref([]);
@@ -32,7 +34,7 @@ onMounted(async () => {
     tournaments.value = data.tournaments;
     errors.value = data.errors;
   } catch (err) {
-    loadError.value = `Không tải được dữ liệu: ${err.message}`;
+    loadError.value = err.message;
   } finally {
     loading.value = false;
   }
@@ -42,19 +44,19 @@ onMounted(async () => {
 <template>
   <StatsFilters v-model="filter" :years="years" />
 
-  <div v-if="loadError" class="error" role="alert">{{ loadError }}</div>
+  <div v-if="loadError" class="error" role="alert">{{ t('stats.errors.load', { message: loadError }) }}</div>
   <div v-else-if="errors.length" class="error" role="alert">
-    Dữ liệu có lỗi, phần sai đã bị bỏ qua:
+    {{ t('stats.errors.title') }}
     <ul>
-      <li v-for="e in errors" :key="e">{{ e }}</li>
+      <li v-for="(e, i) in errors" :key="i">{{ t(e.key, e.params) }}</li>
     </ul>
   </div>
 
   <div class="grid">
     <RankingTable :stats="stats" :loading="loading" />
-    <section class="history" aria-label="Lịch sử giải">
-      <TournamentCard v-for="(t, i) in history" :key="t.id ?? t.date" :tournament="t" :open="i === 0" />
-      <div v-if="!loading && !history.length" class="card section empty">Chưa có giải nào khớp bộ lọc.</div>
+    <section class="history" :aria-label="t('stats.history.label')">
+      <TournamentCard v-for="(item, i) in history" :key="item.id ?? item.date" :tournament="item" :open="i === 0" />
+      <div v-if="!loading && !history.length" class="card section empty">{{ t('stats.history.empty') }}</div>
     </section>
   </div>
 </template>

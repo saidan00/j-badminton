@@ -1,22 +1,24 @@
 <script setup>
+import { useI18n } from 'vue-i18n';
 import NumberStepper from './NumberStepper.vue';
 
 const count = defineModel({ type: Number, required: true });
 defineProps({
   kind: { type: String, required: true, validator: (v) => ['men', 'women'].includes(v) },
-  name: { type: String, required: true },
   ratio: { type: String, required: true },
 });
+
+const { t } = useI18n();
 </script>
 
 <template>
   <div class="tile" :class="`tile--${kind}`">
     <div class="tile-head">
-      <span class="tile-name">{{ name }}</span>
+      <span class="tile-name">{{ t(`split.${kind}`) }}</span>
       <span class="tile-ratio">{{ ratio }}</span>
     </div>
-    <NumberStepper v-model="count" large :label="`Số ${name.toLowerCase()}`"
-      :dec-label="`Bớt 1 ${name.toLowerCase()}`" :inc-label="`Thêm 1 ${name.toLowerCase()}`" />
+    <NumberStepper v-model="count" large :label="t(`split.count.${kind}`)" :dec-label="t(`split.remove.${kind}`)"
+      :inc-label="t(`split.add.${kind}`)" />
   </div>
 </template>
 
@@ -39,6 +41,7 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
   margin-bottom: 10px;
 }
 
@@ -74,6 +77,17 @@ defineProps({
 @media (max-width: 420px) {
   .tile {
     padding: 10px;
+  }
+}
+
+@media (max-width: 359px) {
+  .tile-name {
+    font-size: 17px;
+    letter-spacing: .04em;
+  }
+
+  .tile-name::before {
+    display: none;
   }
 }
 </style>

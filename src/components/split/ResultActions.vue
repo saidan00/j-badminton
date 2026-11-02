@@ -1,5 +1,6 @@
 <script setup>
 import { reactive, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useQrImage } from '@/composables/useQrImage.js';
 import { useToast } from '@/composables/useToast.js';
 import { LOGO_URL } from '@/config.js';
@@ -10,6 +11,7 @@ import { summary } from '@/lib/split.js';
 
 const props = defineProps({ result: { type: Object, required: true } });
 
+const { t } = useI18n();
 const { src: qrSrc } = useQrImage();
 const toast = useToast();
 const busy = ref(false);
@@ -23,7 +25,7 @@ function flash(key, text, ok = true) {
   timers[key] = setTimeout(() => delete flashes[key], 1800);
 }
 
-const filename = () => `chia-tien-cau-long-${today()}.png`;
+const filename = () => t('split.filename', { date: today() });
 const card = () => renderCard(props.result, { qrSrc: qrSrc.value, logoSrc: LOGO_URL });
 
 async function copyImage() {
@@ -37,11 +39,10 @@ async function copyImage() {
     } catch {
       outcome = await shareOrDownload(await job, filename());
     }
-    const labels = { copied: 'Đã copy ✓', shared: 'Đã chia sẻ ✓', downloaded: 'Đã tải ✓' };
-    if (labels[outcome]) flash('image', labels[outcome]);
-    if (outcome === 'copied') toast.show('Đã copy ảnh, dán vào nhóm thôi! 🏸');
+    if (outcome !== 'cancelled') flash('image', t(`split.actions.${outcome}`));
+    if (outcome === 'copied') toast.show(t('split.actions.imageCopied'));
   } catch {
-    flash('image', 'Lỗi rồi 😢', false);
+    flash('image', t('split.actions.failed'), false);
   } finally {
     busy.value = false;
   }
@@ -49,7 +50,7 @@ async function copyImage() {
 
 async function copySummary() {
   const ok = await copyText(summary(props.result));
-  flash('text', ok ? 'Đã copy ✓' : 'Lỗi rồi 😢', ok);
+  flash('text', t(ok ? 'split.actions.copied' : 'split.actions.failed'), ok);
 }
 
 async function saveImage() {
@@ -72,7 +73,7 @@ async function saveImage() {
         <circle cx="8.5" cy="8.5" r="1.5" />
         <path d="M21 15l-5-5L5 21" />
       </svg>
-      <span>{{ flashes.image?.text ?? 'Copy ảnh' }}</span>
+      <span>{{ flashes.image?.text ?? t('split.actions.copyImage') }}</span>
     </button>
     <button type="button" class="btn" :class="{ 'is-done': flashes.text?.ok }" @click="copySummary">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -80,10 +81,10 @@ async function saveImage() {
         <rect x="9" y="9" width="12" height="12" rx="2" />
         <path d="M5 15V5a2 2 0 0 1 2-2h10" />
       </svg>
-      <span>{{ flashes.text?.text ?? 'Copy chữ' }}</span>
+      <span>{{ flashes.text?.text ?? t('split.actions.copyText') }}</span>
     </button>
-    <button type="button" class="btn btn--icon" :class="{ 'is-done': flashes.save?.ok }" aria-label="Tải ảnh về máy"
-      title="Tải ảnh về máy" @click="saveImage">
+    <button type="button" class="btn btn--icon" :class="{ 'is-done': flashes.save?.ok }" :aria-label="t('split.actions.download')"
+      :title="t('split.actions.download')" @click="saveImage">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
         stroke-linejoin="round" aria-hidden="true">
         <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
