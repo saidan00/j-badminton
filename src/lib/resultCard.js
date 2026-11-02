@@ -3,7 +3,7 @@ import { CLUB_NAME } from '@/config.js';
 import { loadImage } from './browser.js';
 import { num, vnd } from './format.js';
 import { SHUTTLE } from './shuttle.js';
-import { ROUND_STEP, SHUTTLES_PER_TUBE, WOMEN_RATIO } from './split.js';
+import { payFormulas, ROUND_STEP, SHUTTLES_PER_TUBE, WOMEN_RATIO } from './split.js';
 
 const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
 
@@ -53,9 +53,16 @@ function drawCard(r, qr, logo) {
   const display = token('display'), body = token('body');
   const ink = token('ink'), lime = token('lime'), muted = token('muted'), paper = token('paper');
 
+  const formulas = payFormulas(r);
   const teams = [
-    r.men && { name: 'NAM', label: 'Nam', count: r.men, pay: r.menPay, color: token('men'), tone: token('men-ink') },
-    r.women && { name: 'NỮ', label: 'Nữ', count: r.women, pay: r.womenPay, color: token('women'), tone: token('women-ink') },
+    r.men && {
+      name: 'NAM', label: 'Nam', count: r.men, pay: r.menPay, formula: formulas.men,
+      color: token('men'), tone: token('men-ink'),
+    },
+    r.women && {
+      name: 'NỮ', label: 'Nữ', count: r.women, pay: r.womenPay, formula: formulas.women,
+      color: token('women'), tone: token('women-ink'),
+    },
   ].filter(Boolean);
 
   const fit = qr ? Math.min(440 / qr.naturalWidth, 560 / qr.naturalHeight) : 0;
@@ -64,8 +71,8 @@ function drawCard(r, qr, logo) {
 
   const HEAD_H = 180;
   const BOARD_H = 400;
-  // Ảnh chỉ cần chi phí và số tiền mỗi người, không kèm phần "Cách tính".
-  const RECEIPT_H = 508;
+  // Phần "Cách tính" trong ảnh chỉ giữ công thức Nam/Nữ, bỏ hệ số và tiền nước.
+  const RECEIPT_H = 520 + (teams.length - 1) * 44 + 44;
   const QR_H = qr ? Math.max(qh, 320) + 80 : 0;
   const H = P + HEAD_H + BOARD_H + GAP + RECEIPT_H + (qr ? GAP + QR_H : 0) + 130;
 
@@ -267,6 +274,12 @@ function drawCard(r, qr, logo) {
   text('Thu về sau làm tròn', ix, y + 438, `500 26px ${body}`, muted);
   const collected = vnd(r.collected) + (r.surplus > 0.5 ? ` · dư ${vnd(r.surplus)}` : '');
   text(collected, ir, y + 438, `600 26px ${body}`, ink, { align: 'right' });
+
+  teams.forEach((t, i) => {
+    const hy = y + 520 + i * 44;
+    text(t.label, ix, hy, `500 25px ${body}`, muted);
+    text(t.formula, ir, hy, `600 25px ${body}`, t.tone, { align: 'right' });
+  });
   y += RECEIPT_H;
 
   // QR

@@ -53,6 +53,16 @@ export function howRows(r) {
   return rows;
 }
 
+// Công thức ra số tiền mỗi người; null khi bên đó không có ai.
+export function payFormulas(r) {
+  return {
+    men: !r.men ? null : r.waterEach > 0
+      ? `${num(r.unit)} + ${num(r.waterEach)} = ${num(r.menExact)} → ${vnd(r.menPay)}`
+      : `${num(r.unit)} → ${vnd(r.menPay)}`,
+    women: r.women ? `${num(r.unit)} × ${WOMEN_RATIO} = ${num(r.womenExact)} → ${vnd(r.womenPay)}` : null,
+  };
+}
+
 export function summary(r) {
   const lines = [
     '🏸 CHIA TIỀN CẦU LÔNG',

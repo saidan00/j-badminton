@@ -1,22 +1,12 @@
 <script setup>
 import { computed } from 'vue';
 import { num, vnd } from '@/lib/format.js';
-import { howRows, SHUTTLES_PER_TUBE, WOMEN_RATIO } from '@/lib/split.js';
+import { howRows, payFormulas, SHUTTLES_PER_TUBE } from '@/lib/split.js';
 
 const props = defineProps({ result: { type: Object, required: true } });
 
 const how = computed(() => howRows(props.result));
-const menLine = computed(() => {
-  const r = props.result;
-  if (!r.men) return '—';
-  return r.waterEach > 0
-    ? `${num(r.unit)} + ${num(r.waterEach)} = ${num(r.menExact)} → ${vnd(r.menPay)}`
-    : `${num(r.unit)} → ${vnd(r.menPay)}`;
-});
-const womenLine = computed(() => {
-  const r = props.result;
-  return r.women ? `${num(r.unit)} × ${WOMEN_RATIO} = ${num(r.womenExact)} → ${vnd(r.womenPay)}` : '—';
-});
+const pay = computed(() => payFormulas(props.result));
 </script>
 
 <template>
@@ -42,9 +32,9 @@ const womenLine = computed(() => {
           <dd>{{ value }}</dd>
         </template>
         <dt>Nam</dt>
-        <dd class="men">{{ menLine }}</dd>
+        <dd class="men">{{ pay.men ?? '—' }}</dd>
         <dt>Nữ</dt>
-        <dd class="women">{{ womenLine }}</dd>
+        <dd class="women">{{ pay.women ?? '—' }}</dd>
       </dl>
     </div>
   </div>
