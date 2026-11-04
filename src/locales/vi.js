@@ -17,19 +17,25 @@ export default {
       women: 'Nữ ×{ratio}',
       water: 'Nước: chỉ chia nam',
       rounding: 'Làm tròn lên {step}đ',
+      equal: 'Chia đều mọi người',
     },
     cardRules: 'Nam ×1.0 · Nữ ×{ratio} · Nước chỉ chia nam · Làm tròn lên {step}đ',
+    cardRulesEqual: 'Chia đều cho mọi người · Làm tròn lên {step}đ',
     cardThanks: '🏸 Bạn thanh toán, host thank you',
     filename: 'chia-tien-cau-long-{date}.png',
 
     lineup: 'Đội hình',
+    equal: 'Chia đều',
+    equalHint: 'Ai cũng trả như nhau, không tính hệ số nam/nữ',
     costs: 'Chi phí',
     men: 'Nam',
     women: 'Nữ',
+    all: 'Mọi người',
     count: { men: 'Số nam', women: 'Số nữ' },
     remove: { men: 'Bớt 1 nam', women: 'Bớt 1 nữ', shuttles: 'Bớt 1 quả' },
     add: { men: 'Thêm 1 nam', women: 'Thêm 1 nữ', shuttles: 'Thêm 1 quả' },
     lineupHint: '{people} người · tổng hệ số {weight}',
+    lineupHintEqual: '{people} người · chia đều',
 
     court: 'Tiền sân',
     shuttles: 'Số quả cầu',
@@ -39,6 +45,7 @@ export default {
     water: 'Tiền nước',
     waterMenOnly: 'Chỉ chia cho nam',
     waterShared: 'Không có nam → chia chung theo hệ số',
+    waterEqual: 'Chia đều cho mọi người',
     needPlayers: 'Cần ít nhất 1 người chơi mới chia được nha!',
     calculate: 'Tính tiền',
 
@@ -48,7 +55,7 @@ export default {
     peopleUnknown: '— người',
     perPerson: 'đ / người',
     idle: 'Nhập thông tin rồi bấm {action} nhé',
-    announce: { men: 'Nam {amount} mỗi người', women: 'Nữ {amount} mỗi người' },
+    announce: { men: 'Nam {amount} mỗi người', women: 'Nữ {amount} mỗi người', all: 'Mỗi người {amount}' },
 
     receipt: {
       costs: 'Chi phí',
@@ -61,6 +68,7 @@ export default {
     },
     how: {
       title: 'Cách tính',
+      people: 'Số người',
       weight: 'Tổng hệ số',
       unit: 'Tiền 1 hệ số',
       waterEach: 'Nước mỗi nam',

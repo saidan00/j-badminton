@@ -3,7 +3,14 @@ import { t, upper } from '@/i18n.js';
 import { loadImage } from './browser.js';
 import { num, vnd } from './format.js';
 import { SHUTTLE } from './shuttle.js';
-import { howRows, payFormulas, ROUND_STEP, shuttleNote, surplusNote, WOMEN_RATIO } from './split.js';
+import { howRows, payGroups, ROUND_STEP, shuttleNote, surplusNote, WOMEN_RATIO } from './split.js';
+
+// Màu từng nhóm: [vạch trên bảng tối, chữ trên nền giấy, chấm cạnh QR].
+const TEAM_COLORS = {
+  men: ['men', 'men-ink', 'men'],
+  women: ['women', 'women-ink', 'women'],
+  all: ['lime', 'court-hi', 'court-hi'],
+};
 
 const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(`--${name}`).trim();
 
@@ -53,17 +60,10 @@ function drawCard(r, qr, logo) {
   const display = token('display'), body = token('body');
   const ink = token('ink'), lime = token('lime'), muted = token('muted'), paper = token('paper');
 
-  const formulas = payFormulas(r);
-  const teams = [
-    r.men && {
-      label: t('split.men'), count: r.men, pay: r.menPay, formula: formulas.men,
-      color: token('men'), tone: token('men-ink'),
-    },
-    r.women && {
-      label: t('split.women'), count: r.women, pay: r.womenPay, formula: formulas.women,
-      color: token('women'), tone: token('women-ink'),
-    },
-  ].filter(Boolean);
+  const teams = payGroups(r).filter((g) => g.count).map((g) => {
+    const [color, tone, dot] = TEAM_COLORS[g.kind].map(token);
+    return { ...g, label: t(`split.${g.kind}`), color, tone, dot };
+  });
 
   const fit = qr ? Math.min(440 / qr.naturalWidth, 560 / qr.naturalHeight) : 0;
   const qw = qr ? qr.naturalWidth * fit : 0;
@@ -71,7 +71,7 @@ function drawCard(r, qr, logo) {
 
   const HEAD_H = 180;
   const BOARD_H = 400;
-  // "Cách tính" đầy đủ như trên trang: hệ số, tiền nước rồi công thức Nam/Nữ.
+  // "Cách tính" đầy đủ như trên trang: các dòng tính rồi công thức từng nhóm.
   const how = [
     ...howRows(r).map(([label, value]) => [label, value, ink]),
     ...teams.map((team) => [team.label, team.formula, team.tone]),
@@ -311,7 +311,7 @@ function drawCard(r, qr, logo) {
     text(t('split.qr.note'), tx2, ty + 158, `500 24px ${body}`, muted, { max: maxW });
     teams.forEach((team, i) => {
       const ay = ty + 230 + i * 60;
-      circle(tx2 + 8, ay - 10, 8, team.color);
+      circle(tx2 + 8, ay - 10, 8, team.dot);
       const lw = text(team.label, tx2 + 28, ay, `500 28px ${body}`, ink);
       const ax = tx2 + 28 + Math.max(lw, 50) + 14;
       text(t('split.qr.perPerson', { amount: vnd(team.pay) }), ax, ay + 2, `700 42px ${display}`, team.tone,
@@ -321,7 +321,9 @@ function drawCard(r, qr, logo) {
   }
 
   // Footer
-  const rules = t('split.cardRules', { ratio: WOMEN_RATIO, step: num(ROUND_STEP) });
+  const rules = r.equal
+    ? t('split.cardRulesEqual', { step: num(ROUND_STEP) })
+    : t('split.cardRules', { ratio: WOMEN_RATIO, step: num(ROUND_STEP) });
   text(rules, W / 2, y + 62, `500 22px ${body}`, 'rgba(255, 255, 255, .6)', { align: 'center', max: BW });
   text(t('split.cardThanks'), W / 2, y + 98, `600 22px ${body}`, 'rgba(255, 255, 255, .85)', { align: 'center' });
 

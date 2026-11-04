@@ -3,12 +3,14 @@ import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ResultPanel from '@/components/split/ResultPanel.vue';
 import SplitForm from '@/components/split/SplitForm.vue';
+import { useSplitMode } from '@/composables/useSplitMode.js';
 import { storage } from '@/lib/browser.js';
 import { prefersReducedMotion, vnd } from '@/lib/format.js';
-import { DEFAULTS, split } from '@/lib/split.js';
+import { DEFAULTS, payGroups, split } from '@/lib/split.js';
 
 const STORAGE_KEY = 'badminton-split:v1';
 const { t } = useI18n();
+const equal = useSplitMode();
 
 function loadSaved() {
   try { return JSON.parse(storage.get(STORAGE_KEY)) || {}; } catch { return {}; }
@@ -31,7 +33,7 @@ function calculate(withAnimation) {
   }
   error.value = '';
   animate.value = withAnimation;
-  result.value = split({ ...inputs.value });
+  result.value = split({ ...inputs.value, equal: equal.value });
   return true;
 }
 
@@ -40,15 +42,17 @@ watch(inputs, () => {
   storage.set(STORAGE_KEY, JSON.stringify(inputs.value));
   if (result.value) calculate(false);
 }, { deep: true });
+watch(equal, () => {
+  if (result.value) calculate(false);
+});
 
 function onSubmit() {
   if (!calculate(true)) return;
   form.value.smash();
-  const r = result.value;
-  announce.value = [
-    r.men ? t('split.announce.men', { amount: vnd(r.menPay) }) : '',
-    r.women ? t('split.announce.women', { amount: vnd(r.womenPay) }) : '',
-  ].filter(Boolean).join(', ');
+  announce.value = payGroups(result.value)
+    .filter((g) => g.count)
+    .map((g) => t(`split.announce.${g.kind}`, { amount: vnd(g.pay) }))
+    .join(', ');
   if (matchMedia('(max-width: 899px)').matches) {
     panel.value.$el.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'start' });
   }

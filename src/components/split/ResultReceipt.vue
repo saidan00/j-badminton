@@ -2,13 +2,13 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { vnd } from '@/lib/format.js';
-import { howRows, payFormulas, shuttleNote, surplusNote } from '@/lib/split.js';
+import { howRows, payGroups, shuttleNote, surplusNote } from '@/lib/split.js';
 
 const props = defineProps({ result: { type: Object, required: true } });
 
 const { t } = useI18n();
 const how = computed(() => howRows(props.result));
-const pay = computed(() => payFormulas(props.result));
+const groups = computed(() => payGroups(props.result));
 </script>
 
 <template>
@@ -33,10 +33,10 @@ const pay = computed(() => payFormulas(props.result));
           <dt>{{ label }}</dt>
           <dd>{{ value }}</dd>
         </template>
-        <dt>{{ t('split.men') }}</dt>
-        <dd class="men">{{ pay.men ?? '—' }}</dd>
-        <dt>{{ t('split.women') }}</dt>
-        <dd class="women">{{ pay.women ?? '—' }}</dd>
+        <template v-for="g in groups" :key="g.kind">
+          <dt>{{ t(`split.${g.kind}`) }}</dt>
+          <dd :class="g.kind">{{ g.formula ?? '—' }}</dd>
+        </template>
       </dl>
     </div>
   </div>
@@ -142,5 +142,9 @@ const pay = computed(() => payFormulas(props.result));
 
 .how dd.women {
   color: var(--women-ink);
+}
+
+.how dd.all {
+  color: var(--court-hi);
 }
 </style>

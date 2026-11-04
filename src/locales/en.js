@@ -17,19 +17,25 @@ export default {
       women: 'Women ×{ratio}',
       water: 'Water: men only',
       rounding: 'Rounded up to {step}đ',
+      equal: 'Equal split',
     },
     cardRules: 'Men ×1.0 · Women ×{ratio} · Water split among men · Rounded up to {step}đ',
+    cardRulesEqual: 'Everyone pays the same · Rounded up to {step}đ',
     cardThanks: '🏸 You pay, the host says thank you',
     filename: 'badminton-cost-split-{date}.png',
 
     lineup: 'Players',
+    equal: 'Split equally',
+    equalHint: 'Everyone pays the same, no men/women weights',
     costs: 'Costs',
     men: 'Men',
     women: 'Women',
+    all: 'Everyone',
     count: { men: 'Number of men', women: 'Number of women' },
     remove: { men: 'Remove 1 man', women: 'Remove 1 woman', shuttles: 'Remove 1 shuttle' },
     add: { men: 'Add 1 man', women: 'Add 1 woman', shuttles: 'Add 1 shuttle' },
     lineupHint: '{people} player · total weight {weight} | {people} players · total weight {weight}',
+    lineupHintEqual: '{people} player · equal split | {people} players · equal split',
 
     court: 'Court fee',
     shuttles: 'Shuttlecocks used',
@@ -39,6 +45,7 @@ export default {
     water: 'Water',
     waterMenOnly: 'Split among men only',
     waterShared: 'No men → split by weight',
+    waterEqual: 'Split among everyone',
     needPlayers: 'Add at least 1 player to split the bill!',
     calculate: 'Calculate',
 
@@ -48,7 +55,7 @@ export default {
     peopleUnknown: '— people',
     perPerson: 'đ / person',
     idle: 'Fill in the details and tap {action}',
-    announce: { men: 'Men {amount} each', women: 'Women {amount} each' },
+    announce: { men: 'Men {amount} each', women: 'Women {amount} each', all: 'Everyone {amount} each' },
 
     receipt: {
       costs: 'Costs',
@@ -61,6 +68,7 @@ export default {
     },
     how: {
       title: 'How it’s calculated',
+      people: 'Players',
       weight: 'Total weight',
       unit: 'Per weight unit',
       waterEach: 'Water per man',

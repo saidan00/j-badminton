@@ -1,16 +1,18 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useQrImage } from '@/composables/useQrImage.js';
 import { useToast } from '@/composables/useToast.js';
 import { vnd } from '@/lib/format.js';
+import { payGroups } from '@/lib/split.js';
 
-defineProps({ result: { type: Object, required: true } });
+const props = defineProps({ result: { type: Object, required: true } });
 
 const { t } = useI18n();
 const { src, replace } = useQrImage();
 const toast = useToast();
 const fileInput = ref(null);
+const groups = computed(() => payGroups(props.result).filter((g) => g.count));
 
 const pick = () => fileInput.value.click();
 
@@ -38,11 +40,8 @@ async function onFile(e) {
       <h3>{{ t('split.qr.title') }}</h3>
       <p>{{ t('split.qr.note') }}</p>
       <ul class="qr-amounts">
-        <li v-if="result.men" class="m">
-          {{ t('split.men') }} <b>{{ t('split.qr.perPerson', { amount: vnd(result.menPay) }) }}</b>
-        </li>
-        <li v-if="result.women" class="w">
-          {{ t('split.women') }} <b>{{ t('split.qr.perPerson', { amount: vnd(result.womenPay) }) }}</b>
+        <li v-for="g in groups" :key="g.kind" :class="g.kind">
+          {{ t(`split.${g.kind}`) }} <b>{{ t('split.qr.perPerson', { amount: vnd(g.pay) }) }}</b>
         </li>
       </ul>
       <p class="qr-tip">{{ t('split.qr.tip') }}</p>
@@ -150,12 +149,16 @@ async function onFile(e) {
   background: var(--c);
 }
 
-.qr-amounts .m {
+.qr-amounts .men {
   --c: var(--men);
 }
 
-.qr-amounts .w {
+.qr-amounts .women {
   --c: var(--women);
+}
+
+.qr-amounts .all {
+  --c: var(--court-hi);
 }
 
 .qr-amounts b {

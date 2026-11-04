@@ -1,7 +1,9 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useSplitMode } from '@/composables/useSplitMode.js';
 import { vnd } from '@/lib/format.js';
+import { payGroups } from '@/lib/split.js';
 import CountUp from './CountUp.vue';
 
 const props = defineProps({
@@ -10,13 +12,12 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
+const equal = useSplitMode();
 
+// Chưa tính thì vẫn hiện khung theo chế độ đang chọn.
 const teams = computed(() => {
-  const r = props.result;
-  return [
-    { kind: 'men', count: r?.men, pay: r?.menPay },
-    { kind: 'women', count: r?.women, pay: r?.womenPay },
-  ];
+  if (props.result) return payGroups(props.result);
+  return (equal.value ? ['all'] : ['men', 'women']).map((kind) => ({ kind }));
 });
 </script>
 
@@ -26,7 +27,7 @@ const teams = computed(() => {
       <span class="live" :class="{ 'is-idle': !result }"><i></i>{{ t('split.result') }}</span>
       <span class="board-total">{{ t('split.total') }}<b>{{ result ? vnd(result.total) : '—' }}</b></span>
     </div>
-    <div class="teams">
+    <div class="teams" :class="{ 'is-single': teams.length === 1 }">
       <template v-for="(team, i) in teams" :key="team.kind">
         <div v-if="i > 0" class="net" aria-hidden="true"></div>
         <div class="team" :class="[`team--${team.kind}`, { 'is-empty': result && !team.count }]">
@@ -82,8 +83,16 @@ const teams = computed(() => {
   text-transform: none;
 }
 
+.teams.is-single {
+  grid-template-columns: 1fr;
+}
+
 .team--women {
   --c: var(--women);
+}
+
+.team--all {
+  --c: var(--lime);
 }
 
 .team.is-empty .score {

@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import SplitView from './views/SplitView.vue';
+import { useSplitMode } from './composables/useSplitMode.js';
 import { splitRules } from './lib/split.js';
 
 // Hash history vì GitHub Pages không rewrite đường dẫn về index.html.
@@ -11,7 +12,7 @@ const router = createRouter({
       path: '/',
       name: 'split',
       component: SplitView,
-      meta: { i18nKey: 'split', chips: splitRules, note: true },
+      meta: { i18nKey: 'split', chips: () => splitRules(useSplitMode().value), note: true },
     },
     {
       path: '/stats',
