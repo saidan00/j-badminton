@@ -1,5 +1,5 @@
 export default {
-  club: 'Huy Vo Badminton Club',
+  club: 'Jay Badminton Club',
   lang: { label: 'Language' },
   nav: {
     label: 'Pages',
