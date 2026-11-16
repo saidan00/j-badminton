@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ShuttleIcon from '@/components/icons/ShuttleIcon.vue';
+import ToggleSwitch from '@/components/ToggleSwitch.vue';
 import { useSplitMode } from '@/composables/useSplitMode.js';
 import { dec, vnd } from '@/lib/format.js';
 import { shuttleCost, SHUTTLES_PER_TUBE, totalWeight, WOMEN_RATIO } from '@/lib/split.js';
@@ -47,11 +48,7 @@ defineExpose({ smash });
     <section class="section">
       <div class="sec-title">
         <h2><em>01</em>{{ t('split.lineup') }}</h2>
-        <label class="mode" :title="t('split.equalHint')">
-          <input v-model="equal" type="checkbox" role="switch">
-          <span>{{ t('split.equal') }}</span>
-          <span class="mode-track" aria-hidden="true"></span>
-        </label>
+        <ToggleSwitch v-model="equal" :label="t('split.equal')" :title="t('split.equalHint')" />
       </div>
       <div class="lineup">
         <LineupTile v-model="inputs.men" kind="men" ratio="×1.0" />
@@ -106,64 +103,6 @@ defineExpose({ smash });
 </template>
 
 <style scoped>
-.mode {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  align-self: center;
-  font: 600 13px/1 var(--body);
-  color: var(--muted);
-  cursor: pointer;
-  user-select: none;
-}
-
-.mode input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.mode-track {
-  position: relative;
-  flex: none;
-  width: 40px;
-  height: 24px;
-  border-radius: 12px;
-  background: var(--rule);
-  transition: background .15s;
-}
-
-.mode-track::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .25);
-  transition: transform .15s;
-}
-
-.mode:has(input:checked) {
-  color: var(--ink);
-}
-
-.mode input:checked~.mode-track {
-  background: var(--court-hi);
-}
-
-.mode input:checked~.mode-track::after {
-  transform: translateX(16px);
-}
-
-.mode input:focus-visible~.mode-track {
-  outline: 3px solid var(--lime-deep);
-  outline-offset: 2px;
-}
-
 .lineup {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

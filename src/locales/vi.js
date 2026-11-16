@@ -91,6 +91,8 @@ export default {
       unreadable: 'Không đọc được ảnh này 😢',
     },
     actions: {
+      fullFormula: 'Công thức đầy đủ trong ảnh',
+      fullFormulaHint: 'Tắt thì ảnh chỉ giữ công thức tiền mỗi người',
       copyImage: 'Copy ảnh',
       copyText: 'Copy chữ',
       download: 'Tải ảnh về máy',

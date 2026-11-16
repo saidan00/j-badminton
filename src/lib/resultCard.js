@@ -55,7 +55,7 @@ function drawShuttle(ctx, cx, cy, size, ink) {
   ctx.restore();
 }
 
-function drawCard(r, qr, logo) {
+function drawCard(r, qr, logo, fullFormula) {
   const W = 1080, P = 60, GAP = 24, BW = W - P * 2;
   const display = token('display'), body = token('body');
   const ink = token('ink'), lime = token('lime'), muted = token('muted'), paper = token('paper');
@@ -71,9 +71,10 @@ function drawCard(r, qr, logo) {
 
   const HEAD_H = 180;
   const BOARD_H = 400;
-  // "Cách tính" đầy đủ như trên trang: các dòng tính rồi công thức từng nhóm.
+  // "Cách tính": bật công thức đầy đủ thì có thêm các dòng tính như trên trang,
+  // tắt thì chỉ còn công thức tiền mỗi người.
   const how = [
-    ...howRows(r).map(([label, value]) => [label, value, ink]),
+    ...(fullFormula ? howRows(r).map(([label, value]) => [label, value, ink]) : []),
     ...teams.map((team) => [team.label, team.formula, team.tone]),
   ];
   const RECEIPT_H = 520 + (how.length - 1) * 44 + 44;
@@ -330,9 +331,9 @@ function drawCard(r, qr, logo) {
   return canvas;
 }
 
-export async function renderCard(r, { qrSrc, logoSrc }) {
+export async function renderCard(r, { qrSrc, logoSrc, fullFormula = true }) {
   const [, qr, logo] = await Promise.all([fontsReady(), loadImage(qrSrc), loadImage(logoSrc)]);
-  const canvas = drawCard(r, qr, logo);
+  const canvas = drawCard(r, qr, logo, fullFormula);
   return new Promise((resolve, reject) => {
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))), 'image/png');
   });

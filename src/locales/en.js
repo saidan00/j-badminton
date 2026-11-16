@@ -91,6 +91,8 @@ export default {
       unreadable: 'Couldn’t read this image 😢',
     },
     actions: {
+      fullFormula: 'Full calculation in image',
+      fullFormulaHint: 'When off, the image keeps only what each person pays',
       copyImage: 'Copy image',
       copyText: 'Copy text',
       download: 'Download image',

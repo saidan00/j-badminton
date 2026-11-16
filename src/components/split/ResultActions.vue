@@ -1,20 +1,27 @@
 <script setup>
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ToggleSwitch from '@/components/ToggleSwitch.vue';
 import { useQrImage } from '@/composables/useQrImage.js';
 import { useToast } from '@/composables/useToast.js';
 import { LOGO_URL } from '@/config.js';
-import { copyText, download, shareOrDownload } from '@/lib/browser.js';
+import { copyText, download, shareOrDownload, storage } from '@/lib/browser.js';
 import { today } from '@/lib/format.js';
 import { renderCard } from '@/lib/resultCard.js';
 import { summary } from '@/lib/split.js';
 
 const props = defineProps({ result: { type: Object, required: true } });
 
+const FORMULA_KEY = 'badminton-split:full-formula';
+
 const { t } = useI18n();
 const { src: qrSrc } = useQrImage();
 const toast = useToast();
 const busy = ref(false);
+
+// Ảnh copy/tải về kèm đủ các dòng tính (hệ số, tiền 1 hệ số, nước) hay chỉ công thức tiền mỗi người.
+const fullFormula = ref(storage.get(FORMULA_KEY) !== '0');
+watch(fullFormula, (on) => storage.set(FORMULA_KEY, on ? '1' : '0'));
 
 // Đổi nhãn nút trong chốc lát để báo kết quả (Đã copy ✓, Lỗi rồi…).
 const flashes = reactive({});
@@ -26,7 +33,7 @@ function flash(key, text, ok = true) {
 }
 
 const filename = () => t('split.filename', { date: today() });
-const card = () => renderCard(props.result, { qrSrc: qrSrc.value, logoSrc: LOGO_URL });
+const card = () => renderCard(props.result, { qrSrc: qrSrc.value, logoSrc: LOGO_URL, fullFormula: fullFormula.value });
 
 async function copyImage() {
   busy.value = true;
@@ -64,6 +71,8 @@ async function saveImage() {
 </script>
 
 <template>
+  <ToggleSwitch v-model="fullFormula" class="formula-toggle" :label="t('split.actions.fullFormula')"
+    :title="t('split.actions.fullFormulaHint')" />
   <div class="actions">
     <button type="button" class="btn btn--primary" :class="{ 'is-done': flashes.image?.ok }"
       :aria-busy="busy || undefined" @click="copyImage">
@@ -94,11 +103,26 @@ async function saveImage() {
 </template>
 
 <style scoped>
+.formula-toggle {
+  margin-top: 18px;
+}
+
 .actions {
   display: grid;
   grid-template-columns: 1fr 1fr auto;
   gap: 10px;
-  margin-top: 16px;
+  margin-top: 12px;
+}
+
+/* Màn hẹp (nhất là bản tiếng Anh) không đủ chỗ cho 3 nút một hàng: Copy ảnh lên hàng riêng */
+@media (max-width: 459px) {
+  .actions {
+    grid-template-columns: 1fr auto;
+  }
+
+  .btn--primary {
+    grid-column: 1 / -1;
+  }
 }
 
 .btn {
