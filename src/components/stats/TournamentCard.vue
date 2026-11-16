@@ -1,61 +1,105 @@
 <script setup>
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ChevronIcon from '@/components/icons/ChevronIcon.vue';
-import { fmtDate, titleOf } from '@/lib/stats.js';
+import { fmtDate, titleOf, winnerSide } from '@/lib/stats.js';
+import MatchRow from './MatchRow.vue';
 import PlayerNames from './PlayerNames.vue';
 
-defineProps({
+const props = defineProps({
   tournament: { type: Object, required: true },
   open: Boolean,
 });
 
 const { t } = useI18n();
 const SIDES = ['a', 'b'];
-const aWon = (m) => m.score[0] > m.score[1];
+
+const result = computed(() => props.tournament.result);
+// Giải chia bảng: vòng bảng + loại trực tiếp; còn lại là 2 đội đấu nhiều trận.
+const isGroups = computed(() => props.tournament.format === 'groups');
+const finalScore = computed(() => {
+  const m = result.value.final;
+  if (!m) return '';
+  const [win, lose] = winnerSide(m) === 'a' ? m.score : [...m.score].reverse();
+  return `${win}–${lose}`;
+});
 </script>
 
 <template>
   <details class="card tourney" :open="open">
     <summary class="board">
       <div class="board-top">
-        <span>{{ titleOf(tournament) }}<template v-if="!tournament.result.winner"> · <b>{{ t('stats.history.draw') }}</b></template></span>
+        <span>{{ titleOf(tournament) }}<template v-if="!isGroups && !result.winner"> · <b>{{ t('stats.history.draw') }}</b></template></span>
         <span class="board-date">{{ fmtDate(tournament.date) }}
           <ChevronIcon />
         </span>
       </div>
-      <div class="teams">
+
+      <div v-if="isGroups" class="champ">
+        <span class="champ-label">🏆 {{ t('stats.history.champion') }}</span>
+        <span class="champ-names">
+          <PlayerNames v-if="result.champion" :ids="result.champion" />
+          <template v-else>—</template>
+        </span>
+        <i18n-t v-if="result.final" keypath="stats.history.finalLine" tag="small" class="champ-final">
+          <template #score>{{ finalScore }}</template>
+          <template #opponents>
+            <PlayerNames :ids="result.runnerUp" />
+          </template>
+        </i18n-t>
+      </div>
+
+      <div v-else class="teams">
         <template v-for="(side, i) in SIDES" :key="side">
           <div v-if="i > 0" class="net"></div>
           <div class="team" :class="[`team--${side}`, {
-            'is-win': tournament.result.winner === side,
-            'is-lose': tournament.result.winner && tournament.result.winner !== side,
+            'is-win': result.winner === side,
+            'is-lose': result.winner && result.winner !== side,
           }]">
             <div class="team-name">
               {{ tournament.teams?.[side] ?? t('stats.history.team', { side: side.toUpperCase() }) }}
               <small>
-                <PlayerNames :ids="[...tournament.result.rosters[side]]" sep=" · " />
+                <PlayerNames :ids="[...result.rosters[side]]" sep=" · " />
               </small>
             </div>
-            <div class="score">{{ tournament.result.wins[side] }}</div>
-            <span v-if="tournament.result.winner === side" class="win-tag">{{ t('stats.history.win') }}</span>
+            <div class="score">{{ result.wins[side] }}</div>
+            <span v-if="result.winner === side" class="win-tag">{{ t('stats.history.win') }}</span>
           </div>
         </template>
       </div>
     </summary>
-    <ol class="matches">
-      <li v-for="(m, i) in tournament.matches" :key="i" class="m">
-        <span class="m-no">{{ i + 1 }}</span>
-        <span class="m-side m-a" :class="{ win: aWon(m) }">
-          <PlayerNames :ids="m.a" />
-        </span>
-        <span class="m-score">
-          <b :class="{ win: aWon(m) }">{{ m.score[0] }}</b>–<b :class="{ win: !aWon(m) }">{{ m.score[1] }}</b>
-          <small v-if="m.decider">{{ t('stats.history.decider') }}</small>
-        </span>
-        <span class="m-side m-b" :class="{ win: !aWon(m) }">
-          <PlayerNames :ids="m.b" />
-        </span>
-      </li>
+
+    <div v-if="isGroups" class="stages">
+      <section v-for="g in result.groups" :key="g.name">
+        <h3 class="stage-title">
+          {{ t('stats.stage.group', { group: g.name }) }}
+          <span>{{ t('stats.history.standings') }}</span>
+        </h3>
+        <ol class="standings">
+          <li v-for="(row, i) in g.rows" :key="row.pair.join()" :class="{ 'is-through': row.through }"
+            :title="row.through ? t('stats.history.through') : undefined">
+            <span class="st-rank">{{ i + 1 }}</span>
+            <span class="st-pair">
+              <PlayerNames :ids="row.pair" />
+            </span>
+            <span class="st-won">{{ row.won }}</span>
+          </li>
+        </ol>
+        <ol class="matches">
+          <MatchRow v-for="(m, i) in g.matches" :key="i" :match="m" :no="i + 1" />
+        </ol>
+      </section>
+      <section v-if="result.knockout.length">
+        <h3 class="stage-title">{{ t('stats.history.knockout') }}</h3>
+        <ol class="matches">
+          <MatchRow v-for="(m, i) in result.knockout" :key="i" :match="m" :note="t(`stats.stage.${m.stage}`)" />
+        </ol>
+      </section>
+    </div>
+
+    <ol v-else class="matches matches--teams">
+      <MatchRow v-for="(m, i) in tournament.matches" :key="i" :match="m" :no="i + 1"
+        :note="m.decider ? t('stats.history.decider') : ''" />
     </ol>
   </details>
 </template>
@@ -127,70 +171,105 @@ const aWon = (m) => m.score[0] > m.score[1];
   text-transform: uppercase;
 }
 
+/* Nhà vô địch trên bảng tối của giải chia bảng */
+.champ {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 20px 0 4px;
+  text-align: center;
+}
+
+.champ-label {
+  font: 800 14px/1 var(--display);
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+
+.champ-names {
+  font: 800 clamp(30px, 8vw, 44px)/1.05 var(--display);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 0 26px rgba(216, 255, 60, .35);
+  text-wrap: balance;
+}
+
+.champ-final {
+  font: 500 13px/1.35 var(--body);
+  color: rgba(255, 255, 255, .6);
+}
+
 .matches {
   list-style: none;
   padding: 8px 18px 14px;
 }
 
-.m {
+.matches--teams {
+  --win-a: var(--team-a-ink);
+  --win-b: var(--team-b-ink);
+}
+
+.stages {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 56px minmax(0, 1fr);
-  align-items: center;
+  gap: 8px;
+  padding: 6px 18px 16px;
+}
+
+.stages .matches {
+  padding: 4px 0 0;
+}
+
+.stage-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
   gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px dashed var(--rule);
-  font: 500 14px/1.25 var(--body);
+  margin: 12px 0 10px;
+  font: 800 18px/1 var(--display);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.stage-title span {
+  font: 600 12px/1 var(--body);
+  letter-spacing: .02em;
+  text-transform: none;
   color: var(--muted);
 }
 
-.m:last-child {
-  border-bottom: 0;
+.standings {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 6px;
 }
 
-.m-no {
-  font: 700 13px/1 var(--display);
-  opacity: .7;
+.standings li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: var(--paper-2);
+  font: 600 14px/1.25 var(--body);
 }
 
-.m-a {
-  text-align: right;
+.standings li.is-through {
+  background: color-mix(in srgb, var(--lime) 30%, #fff);
 }
 
-.m-side.win {
-  font-weight: 700;
+.st-rank {
+  font: 700 14px/1 var(--display);
+  color: var(--muted);
 }
 
-.m-a.win {
-  color: var(--team-a-ink);
-}
-
-.m-b.win {
-  color: var(--team-b-ink);
-}
-
-.m-score {
-  font: 700 20px/1 var(--display);
+.st-won {
+  font: 700 22px/1 var(--display);
   font-variant-numeric: tabular-nums;
-  text-align: center;
-  white-space: nowrap;
-}
-
-.m-score b {
-  font-weight: 600;
-}
-
-.m-score b.win {
-  font-weight: 800;
-  color: var(--ink);
-}
-
-.m-score small {
-  display: block;
-  margin-top: 3px;
-  font: 700 10px/1 var(--body);
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: var(--court-hi);
 }
 
 @media (max-width: 420px) {
@@ -198,9 +277,8 @@ const aWon = (m) => m.score[0] > m.score[1];
     padding: 6px 14px 12px;
   }
 
-  .m {
-    gap: 8px;
-    font-size: 13px;
+  .stages {
+    padding: 4px 14px 14px;
   }
 }
 </style>

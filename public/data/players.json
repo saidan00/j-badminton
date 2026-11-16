@@ -4,9 +4,16 @@
   { "id": "thinh", "name": "Thịnh", "gender": "M" },
   { "id": "huy", "name": "Huy", "gender": "M" },
   { "id": "hanh", "name": "Hoàng Anh", "gender": "M", "aliases": ["H. Anh"] },
-  { "id": "hung", "name": "Hùng", "gender": "M", "aliases": ["Chín"] },
+  { "id": "hung", "name": "Chín", "gender": "M", "aliases": ["Hùng"] },
   { "id": "loc", "name": "Bảo Lộc", "gender": "F", "aliases": ["Lộc"] },
   { "id": "khuong", "name": "Khương", "gender": "M" },
   { "id": "kiet", "name": "Kiệt", "gender": "M" },
-  { "id": "minh", "name": "Minh", "gender": "M" }
+  { "id": "minh", "name": "Minh", "gender": "M" },
+  { "id": "anhhung", "name": "Hùng", "gender": "M", "aliases": ["anh Hùng"] },
+  { "id": "thuan", "name": "Thuận", "gender": "M" },
+  { "id": "cuong", "name": "Cường", "gender": "M" },
+  { "id": "tung", "name": "Tùng", "gender": "M" },
+  { "id": "tinh", "name": "Tính", "gender": "M" },
+  { "id": "tuan", "name": "Tuấn", "gender": "M", "aliases": ["anh Tuấn"] },
+  { "id": "phat", "name": "Phát", "gender": "M" }
 ]

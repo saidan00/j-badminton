@@ -9,6 +9,14 @@ const props = defineProps({ stat: { type: Object, required: true } });
 const { t } = useI18n();
 const nameOf = inject('nameOf');
 const best = computed(() => bestPartner(props.stat));
+// Giải chia bảng ghi theo vòng (Bảng A, Bán kết…), giải 2 đội ghi theo số trận.
+function where(e) {
+  const title = titleOf(e.t);
+  if (e.stage === 'group') return `${title} · ${t('stats.stage.group', { group: e.group })}`;
+  if (e.stage) return `${title} · ${t(`stats.stage.${e.stage}`)}`;
+  return t('stats.detail.match', { title, n: e.i + 1 }) + (e.decider ? t('stats.detail.decider') : '');
+}
+
 const log = computed(() => [...props.stat.log].sort((x, y) => y.t.date.localeCompare(x.t.date) || x.i - y.i));
 </script>
 
@@ -20,8 +28,8 @@ const log = computed(() => [...props.stat.log].sort((x, y) => y.t.date.localeCom
         <dd>{{ stat.events }}</dd>
       </div>
       <div>
-        <dt>{{ t('stats.detail.teamWins') }}</dt>
-        <dd>{{ stat.teamWins }}/{{ stat.events }}</dd>
+        <dt>{{ t('stats.detail.titles') }}</dt>
+        <dd>{{ stat.titles }}/{{ stat.events }}</dd>
       </div>
       <div>
         <dt>{{ t('stats.detail.bestPartner') }}</dt>
@@ -41,9 +49,7 @@ const log = computed(() => [...props.stat.log].sort((x, y) => y.t.date.localeCom
               <PlayerNames :ids="e.opp" />
             </template>
           </i18n-t>
-          <small>
-            {{ t('stats.detail.match', { title: titleOf(e.t), n: e.i + 1 }) }}{{ e.decider ? t('stats.detail.decider') : '' }}
-          </small>
+          <small>{{ where(e) }}</small>
         </span>
         <span class="pd-score">{{ e.mine }}–{{ e.theirs }}</span>
       </li>

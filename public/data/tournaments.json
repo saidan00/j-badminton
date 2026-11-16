@@ -15,5 +15,25 @@
       { "a": ["hanh", "kim"], "b": ["minh", "loc"], "score": [21, 13] },
       { "a": ["binh", "hanh"], "b": ["kiet", "minh"], "score": [21, 17] }
     ]
+  },
+  {
+    "id": "2026-11",
+    "type": "monthly",
+    "date": "2026-11-15",
+    "format": "groups",
+    "matches": [
+      { "stage": "group", "group": "A", "a": ["hung", "kiet"], "b": ["tung", "huy"], "score": [21, 16] },
+      { "stage": "group", "group": "A", "a": ["tinh", "tuan"], "b": ["binh", "phat"], "score": [18, 21] },
+      { "stage": "group", "group": "A", "a": ["hung", "kiet"], "b": ["tinh", "tuan"], "score": [21, 17] },
+      { "stage": "group", "group": "A", "a": ["tung", "huy"], "b": ["binh", "phat"], "score": [21, 16] },
+      { "stage": "group", "group": "A", "a": ["hung", "kiet"], "b": ["binh", "phat"], "score": [21, 19] },
+      { "stage": "group", "group": "A", "a": ["tung", "huy"], "b": ["tinh", "tuan"], "score": [21, 16] },
+      { "stage": "group", "group": "B", "a": ["anhhung", "thuan"], "b": ["khuong", "hanh"], "score": [21, 16] },
+      { "stage": "group", "group": "B", "a": ["khuong", "hanh"], "b": ["cuong", "thinh"], "score": [15, 21] },
+      { "stage": "group", "group": "B", "a": ["anhhung", "thuan"], "b": ["cuong", "thinh"], "score": [16, 21] },
+      { "stage": "semi", "a": ["cuong", "thinh"], "b": ["tung", "huy"], "score": [21, 17] },
+      { "stage": "semi", "a": ["hung", "kiet"], "b": ["anhhung", "thuan"], "score": [21, 14] },
+      { "stage": "final", "a": ["cuong", "thinh"], "b": ["hung", "kiet"], "score": [30, 23] }
+    ]
   }
 ]

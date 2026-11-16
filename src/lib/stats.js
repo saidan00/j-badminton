@@ -4,10 +4,14 @@ import { t } from '@/i18n.js';
 // Dưới số trận này thì vẫn hiện nhưng chưa xếp hạng, tránh 1 trận thắng 1 là 100%.
 export const MIN_MATCHES = 4;
 export const TYPES = ['monthly', 'quarterly'];
+// format "teams": 2 đội đấu nhiều trận đôi (mặc định). "groups": các cặp đấu vòng bảng rồi đấu loại trực tiếp.
+const FORMATS = ['teams', 'groups'];
+export const KNOCKOUT_STAGES = ['quarter', 'semi', 'final'];
 const SIDES = ['a', 'b'];
 
 export const rate = (s) => s.won / s.played;
 const other = (side) => (side === 'a' ? 'b' : 'a');
+export const winnerSide = (m) => (m.score[0] > m.score[1] ? 'a' : 'b');
 
 function parseDate(iso) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -45,10 +49,12 @@ export function validate(rawPlayers, rawTournaments) {
   const list = [];
   for (const t of Array.isArray(rawTournaments) ? rawTournaments : []) {
     const label = t?.id ?? t?.date ?? '?';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(t?.date ?? '') || !TYPES.includes(t.type) || !Array.isArray(t.matches)) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(t?.date ?? '') || !TYPES.includes(t.type) || !Array.isArray(t.matches)
+      || !FORMATS.includes(t.format ?? 'teams')) {
       fail('tournament', { label });
       continue;
     }
+    const groups = t.format === 'groups';
     const matches = t.matches.filter((m, i) => {
       const where = { label, n: i + 1 };
       const sides = [m?.a, m?.b];
@@ -70,6 +76,11 @@ export function validate(rawPlayers, rawTournaments) {
         fail('score', where);
         return false;
       }
+      const stageOk = m.stage === 'group' ? typeof m.group === 'string' && m.group : KNOCKOUT_STAGES.includes(m.stage);
+      if (groups && !stageOk) {
+        fail('stage', where);
+        return false;
+      }
       return true;
     });
     list.push({ ...t, matches });
@@ -77,34 +88,77 @@ export function validate(rawPlayers, rawTournaments) {
   return { players: map, tournaments: list, errors };
 }
 
+// Mọi kết quả giải đều có players (ai tham gia) và champions (ai vô địch) để buildStats dùng chung.
+
 // Đội A là những ai từng đứng bên a; không cố định 5 người vì đội có thể chênh người.
 export function teamResult(t) {
   const rosters = { a: new Set(), b: new Set() };
   const wins = { a: 0, b: 0 };
   for (const m of t.matches) {
     for (const side of SIDES) m[side].forEach((id) => rosters[side].add(id));
-    wins[m.score[0] > m.score[1] ? 'a' : 'b']++;
+    wins[winnerSide(m)]++;
   }
   const winner = wins.a > wins.b ? 'a' : wins.b > wins.a ? 'b' : null;
-  return { rosters, wins, winner };
+  return {
+    rosters, wins, winner,
+    players: new Set([...rosters.a, ...rosters.b]),
+    champions: new Set(winner ? rosters[winner] : []),
+  };
+}
+
+// Giải chia bảng: bảng xếp hạng tính từ các trận vòng bảng (thắng nhiều hơn, rồi hiệu số),
+// vô địch là cặp thắng chung kết.
+export function groupResult(t) {
+  const tables = new Map();
+  const pairKey = (pair) => [...pair].sort().join('+');
+  for (const m of t.matches) {
+    if (m.stage !== 'group') continue;
+    if (!tables.has(m.group)) tables.set(m.group, new Map());
+    const rows = tables.get(m.group);
+    SIDES.forEach((side, i) => {
+      const key = pairKey(m[side]);
+      const row = rows.get(key) ?? { pair: m[side], played: 0, won: 0, diff: 0 };
+      row.played++;
+      if (winnerSide(m) === side) row.won++;
+      row.diff += m.score[i] - m.score[1 - i];
+      rows.set(key, row);
+    });
+  }
+  const knockout = t.matches.filter((m) => m.stage !== 'group');
+  const through = new Set(knockout.flatMap((m) => [pairKey(m.a), pairKey(m.b)]));
+  const groups = [...tables.entries()]
+    .sort(([x], [y]) => x.localeCompare(y))
+    .map(([name, rows]) => ({
+      name,
+      rows: [...rows.values()]
+        .sort((x, y) => y.won - x.won || y.diff - x.diff)
+        .map((row) => ({ ...row, through: through.has(pairKey(row.pair)) })),
+      matches: t.matches.filter((m) => m.stage === 'group' && m.group === name),
+    }));
+  const final = knockout.find((m) => m.stage === 'final') ?? null;
+  const champion = final ? final[winnerSide(final)] : null;
+  return {
+    groups, knockout, final, champion,
+    runnerUp: final ? final[other(winnerSide(final))] : null,
+    players: new Set(t.matches.flatMap((m) => [...m.a, ...m.b])),
+    champions: new Set(champion ?? []),
+  };
 }
 
 export function buildStats(list) {
   const stats = new Map();
   const entry = (id) => {
     if (!stats.has(id)) {
-      stats.set(id, { id, played: 0, won: 0, events: 0, teamWins: 0, partners: new Map(), log: [] });
+      stats.set(id, { id, played: 0, won: 0, events: 0, titles: 0, partners: new Map(), log: [] });
     }
     return stats.get(id);
   };
 
   for (const t of list) {
-    for (const side of SIDES) {
-      for (const id of t.result.rosters[side]) {
-        const s = entry(id);
-        s.events++;
-        if (t.result.winner === side) s.teamWins++;
-      }
+    for (const id of t.result.players) {
+      const s = entry(id);
+      s.events++;
+      if (t.result.champions.has(id)) s.titles++;
     }
 
     t.matches.forEach((m, i) => {
@@ -125,7 +179,7 @@ export function buildStats(list) {
             ps.diff += mine - theirs;
             s.partners.set(partner, ps);
           }
-          s.log.push({ t, i, partner, opp: m[other(side)], mine, theirs, won, decider: m.decider });
+          s.log.push({ t, i, partner, opp: m[other(side)], mine, theirs, won, decider: m.decider, stage: m.stage, group: m.group });
         }
       }
     });
@@ -164,6 +218,6 @@ export async function loadStatsData() {
   const data = validate(rawPlayers, rawTournaments);
   return {
     ...data,
-    tournaments: data.tournaments.map((t) => ({ ...t, result: teamResult(t) })),
+    tournaments: data.tournaments.map((t) => ({ ...t, result: t.format === 'groups' ? groupResult(t) : teamResult(t) })),
   };
 }
