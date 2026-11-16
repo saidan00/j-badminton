@@ -14,6 +14,18 @@ export const dec = (n) => String(Math.round(n * 100) / 100);
 export const digits = (s) => String(s).replace(/\D/g, '');
 export const pct = (r) => Math.round(r * 100) + '%';
 
+// Ngày chơi in trên bill: "Thứ Hai, 16/11/2026" / "Mon 16 Nov 2026".
+const dayFormats = {};
+export function fmtDay(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const en = currentLocale() === 'en';
+  const tag = en ? 'en-GB' : 'vi-VN';
+  dayFormats[tag] ??= new Intl.DateTimeFormat(tag, en
+    ? { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' }
+    : { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+  return dayFormats[tag].format(new Date(y, m - 1, d));
+}
+
 export const today = () => {
   const d = new Date();
   const pad = (n) => String(n).padStart(2, '0');

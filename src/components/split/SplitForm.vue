@@ -6,11 +6,13 @@ import ToggleSwitch from '@/components/ToggleSwitch.vue';
 import { useSplitMode } from '@/composables/useSplitMode.js';
 import { dec, vnd } from '@/lib/format.js';
 import { shuttleCost, SHUTTLES_PER_TUBE, totalWeight, WOMEN_RATIO } from '@/lib/split.js';
+import DateInput from './DateInput.vue';
 import LineupTile from './LineupTile.vue';
 import MoneyInput from './MoneyInput.vue';
 import NumberStepper from './NumberStepper.vue';
 
 const inputs = defineModel({ type: Object, required: true });
+const date = defineModel('date', { type: String, required: true });
 // error là key i18n để đổi ngôn ngữ thì thông báo đổi theo.
 defineProps({ error: { type: String, default: '' } });
 const emit = defineEmits(['submit']);
@@ -66,10 +68,16 @@ defineExpose({ smash });
         <h2><em>02</em>{{ t('split.costs') }}</h2>
       </div>
       <div class="fields">
-        <label class="field">
-          <span class="field-label">{{ t('split.court') }}</span>
-          <MoneyInput v-model="inputs.court" />
-        </label>
+        <div class="row2 row2--date">
+          <label class="field">
+            <span class="field-label">{{ t('split.date') }}</span>
+            <DateInput v-model="date" />
+          </label>
+          <label class="field">
+            <span class="field-label">{{ t('split.court') }}</span>
+            <MoneyInput v-model="inputs.court" />
+          </label>
+        </div>
 
         <div class="row2">
           <div class="field">
@@ -134,6 +142,14 @@ defineExpose({ smash });
   .row2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 12px;
+  }
+}
+
+/* Ô ngày cần rộng hơn ô số, chưa đủ chỗ thì để Ngày và Tiền sân mỗi ô một hàng */
+@media (max-width: 439px) {
+  .row2--date {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 }
 

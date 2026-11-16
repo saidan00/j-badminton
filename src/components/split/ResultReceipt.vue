@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { vnd } from '@/lib/format.js';
+import { fmtDay, vnd } from '@/lib/format.js';
 import { howRows, payGroups, shuttleNote, surplusNote } from '@/lib/split.js';
 
 const props = defineProps({ result: { type: Object, required: true } });
@@ -13,7 +13,10 @@ const groups = computed(() => payGroups(props.result));
 
 <template>
   <div>
-    <p class="label">{{ t('split.receipt.costs') }}</p>
+    <div class="receipt-head">
+      <p class="label">{{ t('split.receipt.costs') }}</p>
+      <span v-if="result.date" class="date">{{ fmtDay(result.date) }}</span>
+    </div>
     <div class="r-row"><span>{{ t('split.receipt.court') }}</span><b>{{ vnd(result.court) }}</b></div>
     <div class="r-row">
       <span>{{ t('split.receipt.shuttles') }}<small>{{ shuttleNote(result) }}</small></span>
@@ -43,6 +46,19 @@ const groups = computed(() => payGroups(props.result));
 </template>
 
 <style scoped>
+.receipt-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.receipt-head .date {
+  font: 600 13px/1 var(--body);
+  color: var(--ink);
+  white-space: nowrap;
+}
+
 .label {
   font: 800 15px/1 var(--display);
   letter-spacing: .14em;

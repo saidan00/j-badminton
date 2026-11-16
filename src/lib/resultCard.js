@@ -1,7 +1,7 @@
 // Vẽ ảnh kết quả chia tiền bằng canvas để copy/chia sẻ vào nhóm chat.
 import { t, upper } from '@/i18n.js';
 import { loadImage } from './browser.js';
-import { num, vnd } from './format.js';
+import { fmtDay, num, vnd } from './format.js';
 import { SHUTTLE } from './shuttle.js';
 import { howRows, payGroups, ROUND_STEP, shuttleNote, surplusNote, WOMEN_RATIO } from './split.js';
 
@@ -260,6 +260,7 @@ function drawCard(r, qr, logo, fullFormula) {
   panel(P, y, BW, RECEIPT_H, paper);
   const ix = P + 48, ir = P + BW - 48;
   text(upper(t('split.receipt.costs')), ix, y + 70, `800 26px ${display}`, muted, { spacing: 5 });
+  if (r.date) text(fmtDay(r.date), ir, y + 70, `600 26px ${body}`, ink, { align: 'right' });
   const rows = [
     [t('split.receipt.court'), vnd(r.court)],
     [t('split.receipt.shuttles'), vnd(r.shuttleCost), shuttleNote(r)],

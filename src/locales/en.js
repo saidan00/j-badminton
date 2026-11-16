@@ -37,6 +37,7 @@ export default {
     lineupHint: '{people} player · total weight {weight} | {people} players · total weight {weight}',
     lineupHintEqual: '{people} player · equal split | {people} players · equal split',
 
+    date: 'Date',
     court: 'Court fee',
     shuttles: 'Shuttlecocks used',
     tubePrice: 'Price per tube',

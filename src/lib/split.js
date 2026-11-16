@@ -1,5 +1,5 @@
 import { t, upper } from '@/i18n.js';
-import { dec, num, vnd } from './format.js';
+import { dec, fmtDay, num, vnd } from './format.js';
 
 export const SHUTTLES_PER_TUBE = 12;
 export const WOMEN_RATIO = 0.8;
@@ -17,10 +17,11 @@ export const roundUp = (n) => Math.ceil(n / ROUND_STEP - 1e-9) * ROUND_STEP;
 export const shuttleCost = (shuttles, tubePrice) => shuttles / SHUTTLES_PER_TUBE * tubePrice;
 export const totalWeight = (men, women) => men + women * WOMEN_RATIO;
 
-export function split({ men, women, court, shuttles, tubePrice, water, equal = false }) {
+export function split({ men, women, court, shuttles, tubePrice, water, equal = false, date = '' }) {
   const shuttleTotal = shuttleCost(shuttles, tubePrice);
   const total = court + shuttleTotal + water;
-  const base = { equal, men, women, court, shuttles, tubePrice, water, shuttleCost: shuttleTotal, total };
+  // date (YYYY-MM-DD) chỉ để in lên bill, không ảnh hưởng phép tính.
+  const base = { equal, date, men, women, court, shuttles, tubePrice, water, shuttleCost: shuttleTotal, total };
 
   if (equal) {
     // Chia đều: tổng tiền (cả nước) chia cho số người.
@@ -95,6 +96,7 @@ export function summary(r) {
   const line = (label, value) => `${label}: ${value}`;
   const lines = [
     `🏸 ${upper(`${t('split.title')} ${t('split.accent')}`)}`,
+    ...(r.date ? [`📅 ${fmtDay(r.date)}`] : []),
     '',
     line(t('split.receipt.court'), vnd(r.court)),
     line(t('split.receipt.shuttles'), `${shuttleNote(r)} = ${vnd(r.shuttleCost)}`),

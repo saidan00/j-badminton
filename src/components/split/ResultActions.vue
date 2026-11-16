@@ -32,7 +32,7 @@ function flash(key, text, ok = true) {
   timers[key] = setTimeout(() => delete flashes[key], 1800);
 }
 
-const filename = () => t('split.filename', { date: today() });
+const filename = () => t('split.filename', { date: props.result.date || today() });
 const card = () => renderCard(props.result, { qrSrc: qrSrc.value, logoSrc: LOGO_URL, fullFormula: fullFormula.value });
 
 async function copyImage() {

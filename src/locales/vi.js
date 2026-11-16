@@ -37,6 +37,7 @@ export default {
     lineupHint: '{people} người · tổng hệ số {weight}',
     lineupHintEqual: '{people} người · chia đều',
 
+    date: 'Ngày chơi',
     court: 'Tiền sân',
     shuttles: 'Số quả cầu',
     tubePrice: 'Giá 1 ống cầu',

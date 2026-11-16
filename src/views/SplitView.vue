@@ -5,7 +5,7 @@ import ResultPanel from '@/components/split/ResultPanel.vue';
 import SplitForm from '@/components/split/SplitForm.vue';
 import { useSplitMode } from '@/composables/useSplitMode.js';
 import { storage } from '@/lib/browser.js';
-import { prefersReducedMotion, vnd } from '@/lib/format.js';
+import { prefersReducedMotion, today, vnd } from '@/lib/format.js';
 import { DEFAULTS, payGroups, split } from '@/lib/split.js';
 
 const STORAGE_KEY = 'badminton-split:v1';
@@ -19,6 +19,8 @@ function loadSaved() {
 const saved = { ...DEFAULTS, ...loadSaved() };
 const inputs = ref(Object.fromEntries(Object.keys(DEFAULTS).map((key) => [key, Number(saved[key]) || 0])));
 
+// Ngày chơi mặc định là hôm nay, không lưu lại để lần sau mở ra không bị ngày cũ.
+const date = ref(today());
 const error = ref(''); // key i18n
 const result = ref(null);
 const animate = ref(false);
@@ -33,7 +35,7 @@ function calculate(withAnimation) {
   }
   error.value = '';
   animate.value = withAnimation;
-  result.value = split({ ...inputs.value, equal: equal.value });
+  result.value = split({ ...inputs.value, equal: equal.value, date: date.value });
   return true;
 }
 
@@ -42,7 +44,7 @@ watch(inputs, () => {
   storage.set(STORAGE_KEY, JSON.stringify(inputs.value));
   if (result.value) calculate(false);
 }, { deep: true });
-watch(equal, () => {
+watch([equal, date], () => {
   if (result.value) calculate(false);
 });
 
@@ -61,7 +63,7 @@ function onSubmit() {
 
 <template>
   <div class="grid">
-    <SplitForm ref="form" v-model="inputs" :error="error" @submit="onSubmit" />
+    <SplitForm ref="form" v-model="inputs" v-model:date="date" :error="error" @submit="onSubmit" />
     <ResultPanel ref="panel" :result="result" :animate="animate" :announce="announce" />
   </div>
 </template>
