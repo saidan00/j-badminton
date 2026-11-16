@@ -203,9 +203,13 @@ export function rankRows(stats, nameOf) {
   });
 }
 
+// Cặp ăn ý nhất xếp theo tỉ lệ thắng có làm mịn (thắng + 1) / (trận + 2), để cặp mới đánh chung
+// 1 trận thắng 1 (67%) không vượt cặp đánh nhiều trận mà thắng gần hết (5/6 → 75%).
+const partnerScore = (p) => (p.won + 1) / (p.played + 2);
+
 export function bestPartner(s) {
   return [...s.partners.entries()].sort(([, x], [, y]) =>
-    rate(y) - rate(x) || y.played - x.played || y.diff - x.diff)[0] ?? null;
+    partnerScore(y) - partnerScore(x) || y.won - x.won || y.diff - x.diff)[0] ?? null;
 }
 
 export async function loadStatsData() {
