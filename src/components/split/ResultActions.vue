@@ -5,7 +5,7 @@ import ToggleSwitch from '@/components/ToggleSwitch.vue';
 import { useQrImage } from '@/composables/useQrImage.js';
 import { useToast } from '@/composables/useToast.js';
 import { LOGO_URL } from '@/config.js';
-import { copyText, download, shareOrDownload, storage } from '@/lib/browser.js';
+import { copyImage as copyImageBlob, copyText, download, storage } from '@/lib/browser.js';
 import { today } from '@/lib/format.js';
 import { renderCard } from '@/lib/resultCard.js';
 import { summary } from '@/lib/split.js';
@@ -37,15 +37,8 @@ const card = () => renderCard(props.result, { qrSrc: qrSrc.value, logoSrc: LOGO_
 
 async function copyImage() {
   busy.value = true;
-  // ClipboardItem nhận Promise để Safari không mất "user gesture" trong lúc vẽ.
-  const job = card();
   try {
-    let outcome = 'copied';
-    try {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': job })]);
-    } catch {
-      outcome = await shareOrDownload(await job, filename());
-    }
+    const outcome = await copyImageBlob(card(), filename());
     if (outcome !== 'cancelled') flash('image', t(`split.actions.${outcome}`));
     if (outcome === 'copied') toast.show(t('split.actions.imageCopied'));
   } catch {

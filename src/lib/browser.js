@@ -72,6 +72,17 @@ export async function shareOrDownload(blob, filename) {
   return 'downloaded';
 }
 
+// Copy ảnh vào clipboard; trình duyệt không cho thì chia sẻ hoặc tải về.
+// job là Promise<Blob> tạo ngay lúc bấm: ClipboardItem nhận Promise để Safari không mất "user gesture" trong lúc vẽ.
+export async function copyImage(job, filename) {
+  try {
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': job })]);
+    return 'copied';
+  } catch {
+    return shareOrDownload(await job, filename);
+  }
+}
+
 export const storage = {
   get(key) {
     try { return localStorage.getItem(key); } catch { return null; }

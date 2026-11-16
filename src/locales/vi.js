@@ -150,6 +150,14 @@ export default {
       through: 'Vào vòng loại trực tiếp',
       knockout: 'Vòng loại trực tiếp',
     },
+    copy: {
+      ranking: 'Copy ảnh bảng xếp hạng',
+      rankingFile: 'bang-xep-hang-{date}.png',
+      tournament: 'Copy ảnh kết quả giải',
+      tournamentFile: 'ket-qua-giai-{id}.png',
+      events: '{n} giải',
+      updated: 'Cập nhật {date}',
+    },
     stage: {
       group: 'Bảng {group}',
       quarter: 'Tứ kết',

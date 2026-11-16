@@ -150,6 +150,14 @@ export default {
       through: 'Reached the knockout stage',
       knockout: 'Knockout stage',
     },
+    copy: {
+      ranking: 'Copy rankings image',
+      rankingFile: 'badminton-rankings-{date}.png',
+      tournament: 'Copy tournament image',
+      tournamentFile: 'tournament-{id}.png',
+      events: '{n} tournament | {n} tournaments',
+      updated: 'Updated {date}',
+    },
     stage: {
       group: 'Group {group}',
       quarter: 'Quarter-final',

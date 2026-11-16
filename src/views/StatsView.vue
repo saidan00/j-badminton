@@ -53,7 +53,7 @@ onMounted(async () => {
   </div>
 
   <div class="grid">
-    <RankingTable :stats="stats" :loading="loading" />
+    <RankingTable :stats="stats" :tournaments="filtered" :loading="loading" />
     <section class="history" :aria-label="t('stats.history.label')">
       <TournamentCard v-for="(item, i) in history" :key="item.id ?? item.date" :tournament="item" :open="i === 0" />
       <div v-if="!loading && !history.length" class="card section empty">{{ t('stats.history.empty') }}</div>

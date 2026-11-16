@@ -1,14 +1,19 @@
 <script setup>
 import { computed, inject, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
+import CopyImageButton from '@/components/CopyImageButton.vue';
 import ChevronIcon from '@/components/icons/ChevronIcon.vue';
 import FemaleIcon from '@/components/icons/FemaleIcon.vue';
-import { pct } from '@/lib/format.js';
-import { MIN_MATCHES, rankRows, rate } from '@/lib/stats.js';
+import { LOGO_URL } from '@/config.js';
+import { pct, today } from '@/lib/format.js';
+import { fmtDate, MIN_MATCHES, rankRows, rate } from '@/lib/stats.js';
+import { renderRanking } from '@/lib/statsCard.js';
 import PlayerDetail from './PlayerDetail.vue';
 
 const props = defineProps({
   stats: { type: Array, required: true },
+  // Các giải đang lọc, để ghi "2 giải · 27/10/2026 – 15/11/2026" lên ảnh.
+  tournaments: { type: Array, default: () => [] },
   loading: Boolean,
 });
 
@@ -19,6 +24,19 @@ const expanded = reactive(new Set());
 
 const rows = computed(() => rankRows(props.stats, nameOf));
 const hasLow = computed(() => rows.value.some((row) => row.isLow));
+
+const subtitle = computed(() => {
+  const dates = props.tournaments.map((x) => x.date).sort();
+  if (!dates.length) return '';
+  const range = dates.length > 1 ? `${fmtDate(dates[0])} – ${fmtDate(dates.at(-1))}` : fmtDate(dates[0]);
+  return `${t('stats.copy.events', dates.length)} · ${range}`;
+});
+const renderImage = () => renderRanking({
+  rows: rows.value,
+  nameOf,
+  isFemale: (id) => players.get(id)?.gender === 'F',
+  subtitle: subtitle.value,
+}, { logoSrc: LOGO_URL });
 
 function toggle(id) {
   if (expanded.has(id)) expanded.delete(id);
@@ -31,6 +49,8 @@ function toggle(id) {
     <div class="sec-title">
       <h2><em>01</em>{{ t('stats.ranking.title') }}</h2>
       <p>{{ t('stats.ranking.hint', { n: MIN_MATCHES }) }}</p>
+      <CopyImageButton v-if="rows.length" :render="renderImage" :label="t('stats.copy.ranking')"
+        :filename="t('stats.copy.rankingFile', { date: today() })" />
     </div>
     <table class="lb">
       <thead>
@@ -73,6 +93,18 @@ function toggle(id) {
 <style scoped>
 .section {
   padding: 22px 20px 18px;
+}
+
+.sec-title {
+  flex-wrap: wrap;
+}
+
+.sec-title p {
+  margin-left: auto;
+}
+
+.sec-title .copy-img {
+  align-self: center;
 }
 
 .lb {
@@ -184,6 +216,18 @@ function toggle(id) {
 @media (max-width: 420px) {
   .section {
     padding: 20px 14px 16px;
+  }
+
+  /* Màn hẹp: nút copy đứng cạnh tiêu đề, dòng ghi chú xuống hàng riêng */
+  .sec-title .copy-img {
+    margin-left: auto;
+  }
+
+  .sec-title p {
+    order: 1;
+    flex-basis: 100%;
+    margin: -4px 0 0;
+    text-align: left;
   }
 
   .lb td {

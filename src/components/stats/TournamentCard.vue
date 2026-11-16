@@ -1,8 +1,11 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
+import CopyImageButton from '@/components/CopyImageButton.vue';
 import ChevronIcon from '@/components/icons/ChevronIcon.vue';
+import { LOGO_URL } from '@/config.js';
 import { fmtDate, titleOf, winnerSide } from '@/lib/stats.js';
+import { renderTournament } from '@/lib/statsCard.js';
 import MatchRow from './MatchRow.vue';
 import PlayerNames from './PlayerNames.vue';
 
@@ -12,6 +15,7 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
+const nameOf = inject('nameOf');
 const SIDES = ['a', 'b'];
 
 const result = computed(() => props.tournament.result);
@@ -23,88 +27,112 @@ const finalScore = computed(() => {
   const [win, lose] = winnerSide(m) === 'a' ? m.score : [...m.score].reverse();
   return `${win}–${lose}`;
 });
+
+const renderImage = () => renderTournament(props.tournament, { nameOf, logoSrc: LOGO_URL });
 </script>
 
+<!-- Nút copy nằm ngoài <details> để vẫn bấm được khi thẻ đang đóng, và không bấm nhầm thành mở/đóng thẻ. -->
 <template>
-  <details class="card tourney" :open="open">
-    <summary class="board">
-      <div class="board-top">
-        <span>{{ titleOf(tournament) }}<template v-if="!isGroups && !result.winner"> · <b>{{ t('stats.history.draw') }}</b></template></span>
-        <span class="board-date">{{ fmtDate(tournament.date) }}
-          <ChevronIcon />
-        </span>
-      </div>
+  <div class="tourney-wrap">
+    <details class="card tourney" :open="open">
+      <summary class="board">
+        <div class="board-top">
+          <span>{{ titleOf(tournament) }}<template v-if="!isGroups && !result.winner"> · <b>{{ t('stats.history.draw') }}</b></template></span>
+          <span class="board-date">{{ fmtDate(tournament.date) }}
+            <ChevronIcon />
+          </span>
+        </div>
 
-      <div v-if="isGroups" class="champ">
-        <span class="champ-label">🏆 {{ t('stats.history.champion') }}</span>
-        <span class="champ-names">
-          <PlayerNames v-if="result.champion" :ids="result.champion" />
-          <template v-else>—</template>
-        </span>
-        <i18n-t v-if="result.final" keypath="stats.history.finalLine" tag="small" class="champ-final">
-          <template #score>{{ finalScore }}</template>
-          <template #opponents>
-            <PlayerNames :ids="result.runnerUp" />
-          </template>
-        </i18n-t>
-      </div>
+        <div v-if="isGroups" class="champ">
+          <span class="champ-label">🏆 {{ t('stats.history.champion') }}</span>
+          <span class="champ-names">
+            <PlayerNames v-if="result.champion" :ids="result.champion" />
+            <template v-else>—</template>
+          </span>
+          <i18n-t v-if="result.final" keypath="stats.history.finalLine" tag="small" class="champ-final">
+            <template #score>{{ finalScore }}</template>
+            <template #opponents>
+              <PlayerNames :ids="result.runnerUp" />
+            </template>
+          </i18n-t>
+        </div>
 
-      <div v-else class="teams">
-        <template v-for="(side, i) in SIDES" :key="side">
-          <div v-if="i > 0" class="net"></div>
-          <div class="team" :class="[`team--${side}`, {
-            'is-win': result.winner === side,
-            'is-lose': result.winner && result.winner !== side,
-          }]">
-            <div class="team-name">
-              {{ tournament.teams?.[side] ?? t('stats.history.team', { side: side.toUpperCase() }) }}
-              <small>
-                <PlayerNames :ids="[...result.rosters[side]]" sep=" · " />
-              </small>
+        <div v-else class="teams">
+          <template v-for="(side, i) in SIDES" :key="side">
+            <div v-if="i > 0" class="net"></div>
+            <div class="team" :class="[`team--${side}`, {
+              'is-win': result.winner === side,
+              'is-lose': result.winner && result.winner !== side,
+            }]">
+              <div class="team-name">
+                {{ tournament.teams?.[side] ?? t('stats.history.team', { side: side.toUpperCase() }) }}
+                <small>
+                  <PlayerNames :ids="[...result.rosters[side]]" sep=" · " />
+                </small>
+              </div>
+              <div class="score">{{ result.wins[side] }}</div>
+              <span v-if="result.winner === side" class="win-tag">{{ t('stats.history.win') }}</span>
             </div>
-            <div class="score">{{ result.wins[side] }}</div>
-            <span v-if="result.winner === side" class="win-tag">{{ t('stats.history.win') }}</span>
-          </div>
-        </template>
+          </template>
+        </div>
+      </summary>
+
+      <div v-if="isGroups" class="stages">
+        <section v-for="g in result.groups" :key="g.name">
+          <h3 class="stage-title">
+            {{ t('stats.stage.group', { group: g.name }) }}
+            <span>{{ t('stats.history.standings') }}</span>
+          </h3>
+          <ol class="standings">
+            <li v-for="(row, i) in g.rows" :key="row.pair.join()" :class="{ 'is-through': row.through }"
+              :title="row.through ? t('stats.history.through') : undefined">
+              <span class="st-rank">{{ i + 1 }}</span>
+              <span class="st-pair">
+                <PlayerNames :ids="row.pair" />
+              </span>
+              <span class="st-won">{{ row.won }}</span>
+            </li>
+          </ol>
+          <ol class="matches">
+            <MatchRow v-for="(m, i) in g.matches" :key="i" :match="m" :no="i + 1" />
+          </ol>
+        </section>
+        <section v-if="result.knockout.length">
+          <h3 class="stage-title">{{ t('stats.history.knockout') }}</h3>
+          <ol class="matches">
+            <MatchRow v-for="(m, i) in result.knockout" :key="i" :match="m" :note="t(`stats.stage.${m.stage}`)" />
+          </ol>
+        </section>
       </div>
-    </summary>
 
-    <div v-if="isGroups" class="stages">
-      <section v-for="g in result.groups" :key="g.name">
-        <h3 class="stage-title">
-          {{ t('stats.stage.group', { group: g.name }) }}
-          <span>{{ t('stats.history.standings') }}</span>
-        </h3>
-        <ol class="standings">
-          <li v-for="(row, i) in g.rows" :key="row.pair.join()" :class="{ 'is-through': row.through }"
-            :title="row.through ? t('stats.history.through') : undefined">
-            <span class="st-rank">{{ i + 1 }}</span>
-            <span class="st-pair">
-              <PlayerNames :ids="row.pair" />
-            </span>
-            <span class="st-won">{{ row.won }}</span>
-          </li>
-        </ol>
-        <ol class="matches">
-          <MatchRow v-for="(m, i) in g.matches" :key="i" :match="m" :no="i + 1" />
-        </ol>
-      </section>
-      <section v-if="result.knockout.length">
-        <h3 class="stage-title">{{ t('stats.history.knockout') }}</h3>
-        <ol class="matches">
-          <MatchRow v-for="(m, i) in result.knockout" :key="i" :match="m" :note="t(`stats.stage.${m.stage}`)" />
-        </ol>
-      </section>
-    </div>
-
-    <ol v-else class="matches matches--teams">
-      <MatchRow v-for="(m, i) in tournament.matches" :key="i" :match="m" :no="i + 1"
-        :note="m.decider ? t('stats.history.decider') : ''" />
-    </ol>
-  </details>
+      <ol v-else class="matches matches--teams">
+        <MatchRow v-for="(m, i) in tournament.matches" :key="i" :match="m" :no="i + 1"
+          :note="m.decider ? t('stats.history.decider') : ''" />
+      </ol>
+    </details>
+    <CopyImageButton class="tourney-copy" dark :render="renderImage" :label="t('stats.copy.tournament')"
+      :filename="t('stats.copy.tournamentFile', { id: tournament.id ?? tournament.date })" />
+  </div>
 </template>
 
 <style scoped>
+.tourney-wrap {
+  position: relative;
+}
+
+.tourney-copy {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+}
+
+/* Chừa chỗ cho nút copy ở góc phải hàng tiêu đề */
+.tourney .board-top {
+  padding-right: 40px;
+}
+
 .tourney>summary {
   list-style: none;
   cursor: pointer;
