@@ -147,6 +147,7 @@ export default {
       champion: 'Champions',
       finalLine: 'Beat {opponents} {score} in the final',
       standings: 'Wins',
+      formTip: '{result} vs {opponents} · {score}',
       through: 'Reached the knockout stage',
       knockout: 'Knockout stage',
     },

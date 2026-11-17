@@ -107,7 +107,7 @@ export function teamResult(t) {
 }
 
 // Giải chia bảng: bảng xếp hạng tính từ các trận vòng bảng (thắng nhiều hơn, rồi hiệu số),
-// vô địch là cặp thắng chung kết.
+// vô địch là cặp thắng chung kết. results giữ kết quả từng trận theo thứ tự đấu để hiện chuỗi T/B.
 export function groupResult(t) {
   const tables = new Map();
   const pairKey = (pair) => [...pair].sort().join('+');
@@ -117,10 +117,12 @@ export function groupResult(t) {
     const rows = tables.get(m.group);
     SIDES.forEach((side, i) => {
       const key = pairKey(m[side]);
-      const row = rows.get(key) ?? { pair: m[side], played: 0, won: 0, diff: 0 };
+      const row = rows.get(key) ?? { pair: m[side], played: 0, won: 0, diff: 0, results: [] };
+      const won = winnerSide(m) === side;
       row.played++;
-      if (winnerSide(m) === side) row.won++;
+      if (won) row.won++;
       row.diff += m.score[i] - m.score[1 - i];
+      row.results.push({ won, opp: m[other(side)], score: [m.score[i], m.score[1 - i]] });
       rows.set(key, row);
     });
   }

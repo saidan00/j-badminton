@@ -147,6 +147,7 @@ export default {
       champion: 'Nhà vô địch',
       finalLine: 'Chung kết {score} trước {opponents}',
       standings: 'Số trận thắng',
+      formTip: '{result} {opponents} · {score}',
       through: 'Vào vòng loại trực tiếp',
       knockout: 'Vòng loại trực tiếp',
     },

@@ -28,6 +28,15 @@ const finalScore = computed(() => {
   return `${win}–${lose}`;
 });
 
+// Chấm T/B của từng trận vòng bảng; rê chuột (hoặc chạm trên điện thoại) xem đối thủ và tỉ số.
+const formResult = (r) => t(r.won ? 'stats.detail.won' : 'stats.detail.lost');
+// Câu đầy đủ cho trình đọc màn hình; tooltip hiện "Thua  Chín  16–21" với mỗi đối thủ một dòng.
+const formTip = (r) => t('stats.history.formTip', {
+  result: formResult(r),
+  opponents: r.opp.map(nameOf).join(' & '),
+  score: r.score.join('–'),
+});
+
 const renderImage = () => renderTournament(props.tournament, { nameOf, logoSrc: LOGO_URL });
 </script>
 
@@ -46,7 +55,7 @@ const renderImage = () => renderTournament(props.tournament, { nameOf, logoSrc: 
         <div v-if="isGroups" class="champ">
           <span class="champ-label">🏆 {{ t('stats.history.champion') }}</span>
           <span class="champ-names">
-            <PlayerNames v-if="result.champion" :ids="result.champion" />
+            <PlayerNames v-if="result.champion" :ids="result.champion" stack />
             <template v-else>—</template>
           </span>
           <i18n-t v-if="result.final" keypath="stats.history.finalLine" tag="small" class="champ-final">
@@ -88,7 +97,20 @@ const renderImage = () => renderTournament(props.tournament, { nameOf, logoSrc: 
               :title="row.through ? t('stats.history.through') : undefined">
               <span class="st-rank">{{ i + 1 }}</span>
               <span class="st-pair">
-                <PlayerNames :ids="row.pair" />
+                <PlayerNames :ids="row.pair" stack />
+              </span>
+              <span class="st-form">
+                <button v-for="(r, k) in row.results" :key="k" type="button" class="form-dot"
+                  :class="{ win: r.won }" :aria-label="formTip(r)">
+                  {{ t(r.won ? 'stats.detail.wonShort' : 'stats.detail.lostShort') }}
+                  <span class="form-tip" aria-hidden="true">
+                    <span class="tip-result">{{ formResult(r) }}</span>
+                    <span class="tip-names">
+                      <PlayerNames :ids="r.opp" stack />
+                    </span>
+                    <span class="tip-score">{{ r.score.join('–') }}</span>
+                  </span>
+                </button>
               </span>
               <span class="st-won">{{ row.won }}</span>
             </li>
@@ -277,7 +299,8 @@ const renderImage = () => renderTournament(props.tournament, { nameOf, logoSrc: 
 
 .standings li {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
+  /* Cột tên cố định để chuỗi T/B thẳng hàng giữa các cặp */
+  grid-template-columns: 18px minmax(0, 104px) 1fr auto;
   align-items: center;
   gap: 10px;
   padding: 9px 12px;
@@ -293,6 +316,102 @@ const renderImage = () => renderTournament(props.tournament, { nameOf, logoSrc: 
 .st-rank {
   font: 700 14px/1 var(--display);
   color: var(--muted);
+}
+
+.st-form {
+  position: relative;
+  display: flex;
+  gap: 5px;
+}
+
+.form-dot {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1.5px solid color-mix(in srgb, var(--muted) 45%, transparent);
+  border-radius: 50%;
+  background: transparent;
+  font: 700 12px/1 var(--display);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.form-dot.win {
+  border-color: var(--court-hi);
+  background: var(--court-hi);
+  color: #fff;
+}
+
+.form-dot:hover,
+.form-dot:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+/* Tooltip tự vẽ (title của trình duyệt hiện chậm và không có trên điện thoại), nằm ngay trên chấm:
+   kết quả | tên đối thủ mỗi người một dòng | tỉ số. */
+.form-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  display: grid;
+  grid-template-columns: auto auto auto;
+  align-items: center;
+  column-gap: 8px;
+  width: max-content;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: var(--ink);
+  box-shadow: 0 6px 18px -6px rgba(0, 0, 0, .4);
+  font: 600 12px/1.35 var(--body);
+  color: #fff;
+  text-align: left;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition: opacity .12s, transform .12s;
+  z-index: 3;
+}
+
+.tip-result {
+  color: rgba(255, 255, 255, .65);
+}
+
+.form-dot.win .tip-result {
+  color: var(--lime);
+}
+
+.tip-score {
+  font: 700 13px/1.35 var(--display);
+  font-variant-numeric: tabular-nums;
+}
+
+.form-dot:hover .form-tip,
+.form-dot:focus .form-tip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* Màn hẹp: chấm nằm sát mép phải, neo tooltip vào mép phải cột chấm để không tràn khỏi thẻ */
+@media (max-width: 420px) {
+  .form-dot {
+    position: static;
+  }
+
+  .form-tip {
+    left: auto;
+    right: 0;
+    transform: translateY(4px);
+  }
+
+  .form-dot:hover .form-tip,
+  .form-dot:focus .form-tip {
+    transform: none;
+  }
 }
 
 .st-won {

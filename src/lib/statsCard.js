@@ -128,11 +128,14 @@ function drawTournament(tournament, nameOf, logo) {
   const groups = tournament.format === 'groups';
   const pairName = (ids) => ids.map(nameOf).join(' & ');
 
-  // Chiều cao từng phần tính trước để biết cỡ canvas.
-  const BOARD_H = groups ? 330 : 440;
-  const STAND_H = 58, TITLE_H = 64, SECTION_GAP = 26;
-  // Trận có nhãn (Bán kết, Quyết định…) dưới tỉ số thì cao hơn để nhãn không đè lên đường kẻ.
-  const matchH = ([, , note]) => (note ? 80 : 64);
+  // Cặp đánh đôi ghi mỗi người một dòng như bảng BWF; chiều cao từng phần tính trước để biết cỡ canvas.
+  const LINE_H = 34, CHAMP_LINE_H = 88;
+  const champLines = result.champion?.length ?? 1;
+  const BOARD_H = groups ? 330 + (champLines - 1) * CHAMP_LINE_H : 440;
+  const TITLE_H = 64, SECTION_GAP = 26;
+  const standH = (row) => 30 + row.pair.length * LINE_H;
+  // Trận có nhãn (Bán kết, Quyết định…) dưới tỉ số thì chừa chỗ để nhãn không đè lên đường kẻ.
+  const matchH = ([m, , note]) => Math.max(30 + Math.max(m.a.length, m.b.length) * LINE_H, note ? 90 : 64);
   const sections = groups
     ? [
       ...result.groups.map((g) => ({
@@ -144,13 +147,14 @@ function drawTournament(tournament, nameOf, logo) {
       }] : []),
     ]
     : [{ title: '', rows: [], matches: tournament.matches.map((m, i) => [m, i + 1, m.decider ? t('stats.history.decider') : '']) }];
-  const sectionH = (sec) => (sec.title ? TITLE_H : 0) + sec.rows.length * STAND_H + (sec.rows.length ? 12 : 0)
+  const sectionH = (sec) => (sec.title ? TITLE_H : 0) + sec.rows.reduce((sum, row) => sum + standH(row), 0)
+    + (sec.rows.length ? 12 : 0)
     + sec.matches.reduce((sum, entry) => sum + matchH(entry), 0);
   const PAPER_H = 30 + sections.reduce((sum, sec) => sum + sectionH(sec), 0) + (sections.length - 1) * SECTION_GAP + 26;
   const H = P + HEAD_H + BOARD_H + GAP + PAPER_H + 80;
 
   const card = createCard(H);
-  const { canvas, ctx, text, roundRect, panel } = card;
+  const { canvas, ctx, text, roundRect, circle, panel } = card;
   drawCourt(card);
   // "GIẢI THÁNG 11/2026": phần cuối (tháng/quý) tô màu chanh.
   const heading = upper(titleOf(tournament));
@@ -169,13 +173,16 @@ function drawTournament(tournament, nameOf, logo) {
     ctx.save();
     ctx.shadowColor = rgba(lime, .45);
     ctx.shadowBlur = 40;
-    text(result.champion ? upper(pairName(result.champion)) : '—', CX, y + 246, `800 86px ${display}`, '#fff',
-      { align: 'center', spacing: 3, max: BW - 80 });
+    (result.champion?.map(nameOf) ?? ['—']).forEach((name, k) => {
+      text(upper(name), CX, y + 246 + k * CHAMP_LINE_H, `800 86px ${display}`, '#fff',
+        { align: 'center', spacing: 3, max: BW - 80 });
+    });
     ctx.restore();
     if (result.final) {
       const [win, lose] = winnerSide(result.final) === 'a' ? result.final.score : [...result.final.score].reverse();
       text(t('stats.history.finalLine', { score: `${win}–${lose}`, opponents: pairName(result.runnerUp) }),
-        CX, y + 298, `500 26px ${body}`, 'rgba(255, 255, 255, .6)', { align: 'center', max: BW - 80 });
+        CX, y + 298 + (champLines - 1) * CHAMP_LINE_H, `500 26px ${body}`, 'rgba(255, 255, 255, .6)',
+        { align: 'center', max: BW - 80 });
     }
   } else {
     const colW = BW / 2;
@@ -233,14 +240,25 @@ function drawTournament(tournament, nameOf, logo) {
   y += BOARD_H + GAP;
   panel(P, y, BW, PAPER_H, token('paper'));
   const winColor = groups ? { a: ink, b: ink } : { a: token('team-a-ink'), b: token('team-b-ink') };
+  const courtHi = token('court-hi');
+  const FORM_X = IX + 250;
 
-  const matchRow = ([m, no, note], top) => {
-    const base = top + (note ? 40 : 42);
+  // Tên các người trong một bên, mỗi người một dòng, căn giữa theo chiều dọc quanh mid.
+  const names = (ids, x, mid, font, color, opts) => {
+    ids.forEach((id, k) => {
+      text(nameOf(id), x, mid + (k - (ids.length - 1) / 2) * LINE_H + 9, font, color, opts);
+    });
+  };
+
+  const matchRow = (entry, top) => {
+    const [m, no, note] = entry;
+    const mid = top + matchH(entry) / 2;
+    const base = mid + 13 - (note ? 10 : 0);
     const aWon = winnerSide(m) === 'a';
-    if (no !== '') text(String(no), IX, base, `700 22px ${display}`, rgba(muted, .7));
-    text(pairName(m.a), CX - 66, base, `${aWon ? 700 : 500} 27px ${body}`, aWon ? winColor.a : muted,
+    if (no !== '') text(String(no), IX, mid + 8, `700 22px ${display}`, rgba(muted, .7));
+    names(m.a, CX - 66, mid, `${aWon ? 700 : 500} 27px ${body}`, aWon ? winColor.a : muted,
       { align: 'right', max: CX - 66 - (IX + 40) });
-    text(pairName(m.b), CX + 66, base, `${aWon ? 500 : 700} 27px ${body}`, aWon ? muted : winColor.b,
+    names(m.b, CX + 66, mid, `${aWon ? 500 : 700} 27px ${body}`, aWon ? muted : winColor.b,
       { max: IR - (CX + 66) });
     // Tỉ số: số của bên thắng đậm màu chữ, bên thua nhạt.
     const font = `700 36px ${display}`;
@@ -265,13 +283,32 @@ function drawTournament(tournament, nameOf, logo) {
       cy += TITLE_H;
     }
     sec.rows.forEach((row, i) => {
+      const h = standH(row);
+      const mid = cy + (h - 8) / 2;
       ctx.fillStyle = row.through ? rgba(lime, .32) : token('paper-2');
-      roundRect(IX - 8, cy, IR - IX + 16, STAND_H - 8, 14);
+      roundRect(IX - 8, cy, IR - IX + 16, h - 8, 14);
       ctx.fill();
-      text(String(i + 1), IX + 18, cy + 34, `700 24px ${display}`, muted, { align: 'center' });
-      text(pairName(row.pair), IX + 52, cy + 34, `600 27px ${body}`, ink, { max: IR - 90 - IX - 52 });
-      text(String(row.won), IR - 14, cy + 36, `700 34px ${display}`, ink, { align: 'right' });
-      cy += STAND_H;
+      text(String(i + 1), IX + 18, mid + 9, `700 24px ${display}`, muted, { align: 'center' });
+      names(row.pair, IX + 52, mid, `600 27px ${body}`, ink, { max: FORM_X - 24 - IX - 52 });
+      // Chuỗi T/B từng trận vòng bảng, thẳng hàng giữa các cặp như trên trang.
+      row.results.forEach((r, k) => {
+        const cx = FORM_X + 18 + k * 46;
+        if (r.won) {
+          circle(cx, mid, 18, courtHi);
+        } else {
+          ctx.save();
+          ctx.strokeStyle = rgba(muted, .45);
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(cx, mid, 17, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        }
+        text(t(r.won ? 'stats.detail.wonShort' : 'stats.detail.lostShort'), cx, mid + 7, `700 19px ${display}`,
+          r.won ? '#fff' : muted, { align: 'center' });
+      });
+      text(String(row.won), IR - 14, mid + 12, `700 34px ${display}`, ink, { align: 'right' });
+      cy += h;
     });
     if (sec.rows.length) cy += 12;
     sec.matches.forEach((entry, i) => {

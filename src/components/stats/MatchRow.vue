@@ -17,14 +17,14 @@ const aWon = computed(() => winnerSide(props.match) === 'a');
   <li class="m">
     <span class="m-no">{{ no }}</span>
     <span class="m-side m-a" :class="{ win: aWon }">
-      <PlayerNames :ids="match.a" />
+      <PlayerNames :ids="match.a" stack />
     </span>
     <span class="m-score">
       <b :class="{ win: aWon }">{{ match.score[0] }}</b>–<b :class="{ win: !aWon }">{{ match.score[1] }}</b>
       <small v-if="note">{{ note }}</small>
     </span>
     <span class="m-side m-b" :class="{ win: !aWon }">
-      <PlayerNames :ids="match.b" />
+      <PlayerNames :ids="match.b" stack />
     </span>
   </li>
 </template>
